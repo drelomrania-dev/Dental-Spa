@@ -1,17 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { CheckCircle2, Clock3, Sparkles } from 'lucide-react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../services/supabase'
-import { todayISO } from '../utils'
+import BookingExperience from '../components/BookingExperience'
 
 export default function PublicBookingRemote(){
-  const {slug}=useParams(); const [link,setLink]=useState(null); const [available,setAvailable]=useState([]); const [loading,setLoading]=useState(true); const [error,setError]=useState(''); const [done,setDone]=useState(null)
-  const [form,setForm]=useState({date:todayISO(),time:'',firstName:'',lastName:'',phone:'',email:''})
+  const {slug}=useParams(); const [link,setLink]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState('')
   useEffect(()=>{let live=true;supabase.rpc('public_booking_page',{p_slug:slug}).then(({data,error:rpcError})=>{if(live){setLink(data);setError(rpcError?.message||'');setLoading(false)}});return()=>{live=false}},[slug])
-  useEffect(()=>{if(!link)return;let live=true;supabase.rpc('public_available_slots',{p_slug:slug,p_date:form.date}).then(({data,error:rpcError})=>{if(live){setAvailable(data||[]);setForm(f=>({...f,time:(data||[]).includes(f.time)?f.time:(data||[])[0]||''}));if(rpcError)setError(rpcError.message)}});return()=>{live=false}},[link,slug,form.date])
-  async function submit(e){e.preventDefault();setError('');const {data,error:rpcError}=await supabase.rpc('public_create_booking',{p_slug:slug,p_date:form.date,p_time:form.time,p_first_name:form.firstName,p_last_name:form.lastName,p_phone:form.phone,p_email:form.email||null});if(rpcError){setError(rpcError.message.includes('Slot unavailable')?'Ce créneau vient d’être réservé. Choisissez-en un autre.':'Impossible d’enregistrer le rendez-vous.');return}setDone(data)}
+  const getSlots=useCallback(async date=>{const {data,error:rpcError}=await supabase.rpc('public_available_slots',{p_slug:slug,p_date:date});if(rpcError)throw rpcError;return data||[]},[slug])
+  const onBook=useCallback(async form=>{const {data,error:rpcError}=await supabase.rpc('public_create_booking',{p_slug:slug,p_date:form.date,p_time:form.time,p_first_name:form.firstName,p_last_name:form.lastName,p_phone:form.phone,p_email:form.email||null});if(rpcError)throw rpcError;return data},[slug])
   if(loading)return <main className="public-booking"><div className="public-card"><p>Chargement des disponibilités…</p></div></main>
-  if(!link)return <main className="public-booking"><div className="public-card"><h1>Lien indisponible</h1><p>Cette page de réservation n’est pas publiée.</p></div></main>
-  if(done)return <main className="public-booking"><div className="public-card booking-success"><CheckCircle2 size={48}/><h1>Rendez-vous enregistré</h1><p>Votre référence est <strong>{done.reference}</strong>.</p><div className="public-summary">{done.date} · {done.time}<br/>{done.reason}<br/>{done.status}</div></div></main>
-  return <main className="public-booking"><div className="public-card"><div className="public-brand"><Sparkles size={20}/><span>Dental Spa</span></div><h1>{link.title}</h1><p>{link.description}</p><div className="public-meta"><span><Clock3 size={15}/> {link.duration||30} minutes</span></div><form onSubmit={submit} className="public-form"><label>Date<input required type="date" min={todayISO()} value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></label><div><span className="public-label">Choisissez une heure</span><div className="slot-grid">{available.map(slot=><button type="button" key={slot} className={form.time===slot?'selected':''} onClick={()=>setForm({...form,time:slot})}>{slot}</button>)}</div>{!available.length&&<div className="form-error">Aucun créneau disponible.</div>}</div><div className="form-grid"><label>Prénom<input required value={form.firstName} onChange={e=>setForm({...form,firstName:e.target.value})}/></label><label>Nom<input required value={form.lastName} onChange={e=>setForm({...form,lastName:e.target.value})}/></label><label>Téléphone<input required value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label></div>{error&&<div className="form-error">{error}</div>}<button className="primary-btn large" disabled={!form.time}>Confirmer le rendez-vous</button></form><small className="public-note">Vos coordonnées sont transmises de manière sécurisée au cabinet.</small></div></main>
+  if(!link||error)return <main className="public-booking"><div className="public-card"><h1>Lien indisponible</h1><p>{error||'Cette page de réservation n’est pas publiée.'}</p></div></main>
+  return <BookingExperience config={{...link,slug}} getSlots={getSlots} onBook={onBook}/>
 }
