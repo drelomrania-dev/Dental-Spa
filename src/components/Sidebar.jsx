@@ -1,12 +1,13 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, CircleDollarSign, ClipboardList, CreditCard, FileHeart, LayoutDashboard, ReceiptText, Settings, Stethoscope, Users, WalletCards, BadgeCheck, Calculator, X } from 'lucide-react'
+import { CalendarDays, CircleDollarSign, ClipboardList, CreditCard, FileHeart, LayoutDashboard, ReceiptText, Settings, Stethoscope, Users, WalletCards, BadgeCheck, Calculator, X, Megaphone } from 'lucide-react'
 import { useData } from '../DataContext'
 import { firebaseEnabled } from '../services/firebase'
 import { supabaseEnabled } from '../services/supabase'
 
 const nav = [
   ['/', 'Vue d’ensemble', LayoutDashboard],
+  ['/acquisition', 'Acquisition', Megaphone],
   ['/patients', 'Patients', Users],
   ['/payments', 'Nouveau paiement', CreditCard],
   ['/payment-history', 'Historique paiements', ReceiptText],

@@ -22,12 +22,17 @@ import AuthGate from './components/AuthGate'
 import PublicBookingRemote from './pages/PublicBookingRemote'
 import { supabaseEnabled } from './services/supabase'
 import RequirePermission from './components/RequirePermission'
+import Acquisition from './pages/Acquisition'
+import LeadProfile from './pages/LeadProfile'
+import PublicIntake from './pages/PublicIntake'
 import './styles.css'
 
 function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
     <Route path="/" element={<Dashboard/>}/>
     <Route path="/patients" element={<Patients/>}/>
     <Route path="/patients/:patientId" element={<PatientProfile/>}/>
+    <Route path="/acquisition" element={<RequirePermission roles={['administrator','assistant','practitioner']}><Acquisition/></RequirePermission>}/>
+    <Route path="/acquisition/:leadId" element={<RequirePermission roles={['administrator','assistant','practitioner']}><LeadProfile/></RequirePermission>}/>
     <Route path="/payments" element={<RequirePermission permission="payments.collect" roles={['administrator']}><Payments/></RequirePermission>}/>
     <Route path="/payment-history" element={<RequirePermission roles={['administrator']}><PaymentHistory/></RequirePermission>}/>
     <Route path="/receivables" element={<RequirePermission roles={['administrator']}><Receivables/></RequirePermission>}/>
@@ -44,6 +49,7 @@ function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
 export default function App(){
   return <BrowserRouter><AuthProvider><Routes>
     <Route path="/book/:slug" element={supabaseEnabled?<PublicBookingRemote/>:<DataProvider><PublicBooking/></DataProvider>}/>
+    <Route path="/intake/:token" element={<PublicIntake/>}/>
     <Route path="/*" element={<AuthGate><DataProvider><InternalRoutes/></DataProvider></AuthGate>}/>
   </Routes></AuthProvider></BrowserRouter>
 }

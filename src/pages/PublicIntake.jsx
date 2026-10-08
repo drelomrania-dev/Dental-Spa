@@ -1,0 +1,45 @@
+import React, { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, ArrowRight, CalendarDays, Camera, Check, CheckCircle2, ClipboardCheck, HeartPulse, ImagePlus, ShieldCheck, Sparkles } from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
+import { getPublicIntake, submitPublicIntake, uploadLeadMedia } from '../services/acquisition'
+
+const STEPS=[['Coordonnées','Parlez-nous de vous'],['Besoin','Préparez votre consultation'],['Photos','Vues guidées'],['Consentement','Vérifiez et envoyez']]
+
+export default function PublicIntake(){
+  const {token}=useParams();const [config,setConfig]=useState(null);const [loading,setLoading]=useState(true);const [error,setError]=useState('');const [step,setStep]=useState(0);const [result,setResult]=useState(null);const [submitting,setSubmitting]=useState(false);const [photoConsent,setPhotoConsent]=useState(false);const [photos,setPhotos]=useState({});const [uploading,setUploading]=useState('')
+  const [form,setForm]=useState({firstName:'',lastName:'',phone:'',email:'',concern:'',urgency:'Normale',previousCare:'',availability:'',consent:false})
+  useEffect(()=>{let live=true;getPublicIntake(token).then(data=>{if(!live)return;setConfig(data);if(data?.firstName)setForm(current=>({...current,firstName:data.firstName}))}).catch(()=>{if(live)setError('Ce lien ne peut pas être ouvert.')}).finally(()=>{if(live)setLoading(false)});return()=>{live=false}},[token])
+  const canContinue=useMemo(()=>step===0?form.firstName.trim()&&form.phone.trim().length>=6:step===1?form.concern.trim().length>=3:step===2?!uploading:form.consent,[step,form,uploading])
+
+  async function choosePhoto(view,file){
+    if(!file||!photoConsent)return
+    if(file.size>8*1024*1024){setError('Chaque photo doit peser moins de 8 Mo.');return}
+    setUploading(view.code);setError('')
+    const preview=URL.createObjectURL(file)
+    try{const uploaded=await uploadLeadMedia(token,view.code,file);setPhotos(current=>({...current,[view.code]:{...uploaded,preview,name:file.name}}))}catch{URL.revokeObjectURL(preview);setError('Cette photo n’a pas pu être envoyée. Vérifiez votre connexion puis réessayez.')}finally{setUploading('')}
+  }
+
+  async function submit(e){
+    e.preventDefault();if(step<3){setStep(current=>current+1);return}
+    setSubmitting(true);setError('')
+    try{setResult(await submitPublicIntake(token,{...form,photoIds:Object.values(photos).map(item=>item.id)}))}catch{setError('Impossible d’envoyer le formulaire. Vérifiez les champs puis réessayez.')}finally{setSubmitting(false)}
+  }
+
+  if(loading)return <main className="intake-page"><div className="intake-loading">Préparation de votre espace sécurisé…</div></main>
+  if(!config)return <main className="intake-page"><section className="intake-message"><ShieldCheck size={34}/><h1>Lien indisponible</h1><p>{error||'Cette invitation est expirée ou a été révoquée.'}</p></section></main>
+  if(result)return <main className="intake-page"><section className="intake-success"><div className="intake-success-mark"><CheckCircle2 size={38}/></div><span>Formulaire reçu</span><h1>Merci {form.firstName}</h1><p>L’équipe de {config.clinicName} dispose maintenant des informations utiles pour préparer votre consultation.</p><div className="intake-reference"><small>Référence</small><strong>{result.reference}</strong></div><Link className="primary-btn large" to={`/book/${result.bookingSlug||config.bookingSlug||'consultation'}`}><CalendarDays size={18}/> Choisir mon rendez-vous</Link></section></main>
+
+  return <main className="intake-page"><section className="intake-shell">
+    <header className="intake-brand"><div><Sparkles size={20}/><strong>{config.clinicName}</strong></div><span>Pré-consultation sécurisée</span></header>
+    <div className="intake-progress" aria-label={`Étape ${step+1} sur 4`}>{STEPS.map((item,index)=><div key={item[0]} className={index<=step?'active':''}><i>{index+1}</i><span><strong>{item[0]}</strong><small>{item[1]}</small></span></div>)}</div>
+    <form onSubmit={submit} className="intake-form">
+      {step===0&&<div className="intake-step"><div className="intake-step-icon"><HeartPulse size={24}/></div><span className="booking-eyebrow">Étape 1 sur 4</span><h1>Vos coordonnées</h1><p>Ces informations permettent au cabinet de vous recontacter au sujet de votre demande.</p><div className="form-grid"><label>Prénom<input required autoComplete="given-name" value={form.firstName} onChange={e=>setForm({...form,firstName:e.target.value})}/></label><label>Nom<input autoComplete="family-name" value={form.lastName} onChange={e=>setForm({...form,lastName:e.target.value})}/></label><label>Téléphone<input required type="tel" autoComplete="tel" minLength="6" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>Email <small>(facultatif)</small><input type="email" autoComplete="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label></div></div>}
+      {step===1&&<div className="intake-step"><div className="intake-step-icon"><ClipboardCheck size={24}/></div><span className="booking-eyebrow">Étape 2 sur 4</span><h1>Votre besoin</h1><p>Quelques précisions suffisent. Aucun diagnostic n’est réalisé à partir de ce formulaire.</p><label className="intake-field">Que souhaitez-vous améliorer ou faire contrôler ?<textarea required rows="4" value={form.concern} onChange={e=>setForm({...form,concern:e.target.value})} placeholder="Ex. douleur, esthétique du sourire, implant, contrôle…"/></label><div className="form-grid"><label>Niveau d’urgence<select value={form.urgency} onChange={e=>setForm({...form,urgency:e.target.value})}><option>Normale</option><option>Rapide</option><option>Urgente</option></select></label><label>Disponibilités préférées<input value={form.availability} onChange={e=>setForm({...form,availability:e.target.value})} placeholder="Matin, après-midi…"/></label></div><label className="intake-field">Soins ou traitements dentaires récents <small>(facultatif)</small><textarea rows="3" value={form.previousCare} onChange={e=>setForm({...form,previousCare:e.target.value})}/></label></div>}
+      {step===2&&<div className="intake-step"><div className="intake-step-icon"><Camera size={24}/></div><span className="booking-eyebrow">Étape 3 sur 4</span><h1>Photos guidées</h1><p>Facultatives, elles aident le praticien à préparer l’échange. Elles ne remplacent jamais un examen clinique.</p><label className="intake-consent photo-consent"><input type="checkbox" checked={photoConsent} onChange={e=>setPhotoConsent(e.target.checked)}/><span>J’accepte d’envoyer des photos dentaires à {config.clinicName}. Elles seront conservées dans un espace privé et accessibles uniquement à l’équipe autorisée.</span></label><div className="photo-capture-grid">{(config.photoViews||[]).map(view=>{const photo=photos[view.code];return <label key={view.code} className={`photo-capture-card ${photo?'uploaded':''}`}><div className="photo-preview">{photo?<img src={photo.preview} alt="Aperçu envoyé"/>:<ImagePlus size={25}/>}</div><span><strong>{view.label}</strong><small>{view.instructions}</small></span>{photo?<b><Check size={14}/> Envoyée</b>:<em>{uploading===view.code?'Envoi…':'Ajouter'}</em>}<input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={!photoConsent||Boolean(uploading)||Boolean(photo)} onChange={e=>choosePhoto(view,e.target.files?.[0])}/></label>})}</div>{!(config.photoViews||[]).length&&<div className="empty-state compact">Aucun protocole photo actif. Vous pouvez continuer.</div>}</div>}
+      {step===3&&<div className="intake-step"><div className="intake-step-icon"><ShieldCheck size={24}/></div><span className="booking-eyebrow">Étape 4 sur 4</span><h1>Consentement</h1><p>Vérifiez que les informations sont exactes avant de les transmettre au cabinet.</p><div className="intake-review"><div><span>Patient</span><strong>{form.firstName} {form.lastName}</strong></div><div><span>Contact</span><strong>{form.phone}</strong></div><div><span>Motif</span><strong>{form.concern}</strong></div><div><span>Photos</span><strong>{Object.keys(photos).length} envoyée(s)</strong></div></div><label className="intake-consent"><input type="checkbox" checked={form.consent} onChange={e=>setForm({...form,consent:e.target.checked})}/><span>J’accepte que {config.clinicName} utilise ces informations pour traiter ma demande de consultation et me recontacter. Je peux demander leur suppression au cabinet.</span></label></div>}
+      {error&&<div className="form-error">{error}</div>}
+      <div className="intake-actions">{step>0&&<button type="button" className="ghost-btn" onClick={()=>setStep(current=>current-1)}><ArrowLeft size={17}/> Retour</button>}<button className="primary-btn" disabled={!canContinue||submitting}>{submitting?'Envoi en cours…':step===3?'Envoyer au cabinet':'Continuer'}{step<3&&<ArrowRight size={17}/>}</button></div>
+    </form>
+    <footer><ShieldCheck size={14}/> Données accessibles uniquement à l’équipe du cabinet · {config.clinicAddress}</footer>
+  </section></main>
+}
