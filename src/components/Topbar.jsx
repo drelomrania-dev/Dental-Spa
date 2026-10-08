@@ -12,9 +12,9 @@ export default function Topbar({ title, subtitle }){
       </div>
       <div className="topbar-actions">
         <div className="global-search"><Search size={17}/><input placeholder="Rechercher patient, paiement…"/></div>
-        <button className="icon-btn has-dot"><Bell size={19}/></button>
+        <button className="icon-btn has-dot topbar-notifications" aria-label="Notifications"><Bell size={19}/></button>
         <div className="avatar" title={session?.user?.email || 'Dental Spa'}>DO</div>
-        {supabaseEnabled&&<button className="icon-btn" title="Se déconnecter" onClick={signOut}><LogOut size={17}/></button>}
+        {supabaseEnabled&&<button className="icon-btn" aria-label="Se déconnecter" title="Se déconnecter" onClick={signOut}><LogOut size={17}/></button>}
       </div>
     </div>
   )

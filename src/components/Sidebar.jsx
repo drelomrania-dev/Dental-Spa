@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, CircleDollarSign, ClipboardList, CreditCard, FileHeart, LayoutDashboard, ReceiptText, Settings, Stethoscope, Users, WalletCards, BadgeCheck, Calculator } from 'lucide-react'
+import { CalendarDays, CircleDollarSign, ClipboardList, CreditCard, FileHeart, LayoutDashboard, ReceiptText, Settings, Stethoscope, Users, WalletCards, BadgeCheck, Calculator, X } from 'lucide-react'
 import { useData } from '../DataContext'
 import { firebaseEnabled } from '../services/firebase'
 import { supabaseEnabled } from '../services/supabase'
@@ -21,7 +21,7 @@ const nav = [
   ['/settings', 'Paramètres', Settings]
 ]
 
-export default function Sidebar(){
+export default function Sidebar({open=false,onClose=()=>{},onNavigate=()=>{}}){
   const { can, currentUser } = useData()
   const storageLabel = supabaseEnabled ? 'Supabase distant · connecté' : firebaseEnabled ? 'Firebase · connecté' : 'Stockage local · actif'
   const visible = new Set(nav.filter(([to]) => {
@@ -31,13 +31,14 @@ export default function Sidebar(){
     return true
   }).map(([to])=>to))
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${open?'is-open':''}`} aria-label="Navigation principale">
       <div className="logo-wrap">
         <div className="logo-mark"><span></span><span></span></div>
         <div><strong>DentalFlow</strong><small>Care. Track. Grow.</small></div>
+        <button className="sidebar-close" type="button" aria-label="Fermer la navigation" onClick={onClose}><X size={20}/></button>
       </div>
       <nav>
-        {nav.filter(([to])=>visible.has(to)).map(([to,label,Icon]) => <NavLink key={to} to={to} end={to==='/' } className={({isActive})=>isActive?'active':''}><Icon size={18}/><span>{label}</span></NavLink>)}
+        {nav.filter(([to])=>visible.has(to)).map(([to,label,Icon]) => <NavLink key={to} to={to} end={to==='/' } onClick={onNavigate} className={({isActive})=>isActive?'active':''}><Icon size={18}/><span>{label}</span></NavLink>)}
       </nav>
       <div className="sidebar-card">
         <div className="sidebar-orb">✦</div>
