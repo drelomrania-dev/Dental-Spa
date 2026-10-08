@@ -1,9 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import { seedData } from '../data/seed'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY
-export const supabaseEnabled = import.meta.env.VITE_DATA_BACKEND === 'supabase' && Boolean(url && key)
+// Supabase publishable credentials are intentionally safe in a browser bundle.
+// Environment variables override these production defaults; development stays
+// local unless VITE_DATA_BACKEND=supabase is explicitly configured.
+const productionUrl = 'https://gmyfzpunvprtujuicmdj.supabase.co'
+const productionPublishableKey = 'sb_publishable_JyRopWUXgBkXyFhX3QvuKQ_oMFzoUW4'
+const url = import.meta.env.VITE_SUPABASE_URL || (import.meta.env.PROD ? productionUrl : '')
+const key = import.meta.env.VITE_SUPABASE_ANON_KEY || (import.meta.env.PROD ? productionPublishableKey : '')
+const backend = import.meta.env.VITE_DATA_BACKEND || (import.meta.env.PROD ? 'supabase' : 'local')
+export const supabaseEnabled = backend === 'supabase' && Boolean(url && key)
 export const supabase = supabaseEnabled ? createClient(url, key, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }) : null
 
 let cachedClinicId = null
