@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Secure default: deploy clinic-scoped, role-based rules before enabling Firestore.
+    // The client fallback remains available for local acceptance testing.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
