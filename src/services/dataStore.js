@@ -3,6 +3,7 @@ import { db, firebaseEnabled } from './firebase'
 import { seedData } from '../data/seed'
 import { remoteClinicId, supabase, supabaseEnabled } from './supabase'
 import { loadFinanceSnapshot, openFinanceSession, recordFinancePayment, submitFinanceSession, validateFinanceSession } from './finance'
+import { loadClinicalSnapshot } from './clinical'
 
 const PREFIX = 'dentalflow:'
 
@@ -29,6 +30,10 @@ export async function listDocs(name){
     if(name==='payments'||name==='collectionSessions'){
       const snapshot=await loadFinanceSnapshot()
       return name==='payments'?snapshot.payments:snapshot.sessions
+    }
+    if(name==='visits'||name==='treatmentPlans'||name==='priceRequests'){
+      const snapshot=await loadClinicalSnapshot()
+      return snapshot[name]
     }
     const clinicId = await remoteClinicId()
     if(name==='patients'){
