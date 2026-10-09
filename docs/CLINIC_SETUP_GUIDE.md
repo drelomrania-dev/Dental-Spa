@@ -1,14 +1,22 @@
-# Clinic setup guide
+# Dental Spa — Clinic setup guide
 
-1. Configure Firebase Authentication and create individual staff accounts.
-2. Replace the starter Firestore rules with role- and clinic-scoped rules.
-3. Configure the clinic name, address, hours, timezone (`Africa/Casablanca`) and currency (`MAD`) in Settings.
-4. Add practitioners and services with real durations and prices.
-5. Review payment methods, receipt numbering, and invoice requirements with the clinic accountant.
-6. Publish only the booking links intended for patients.
-7. Test booking, clinical visit, price approval, payment, receipt, and cash closing with non-production data.
-8. Configure backups, retention, incident response, and access review before importing real patient records.
+1. Open the production URL and sign in with the confirmed administrator account.
+2. In **Paramètres**, verify clinic name, address, phone, currency `MAD` and timezone `Africa/Casablanca`.
+3. Add practitioners and services with their real prices and durations.
+4. Review the `consultation` public booking link before sharing it.
+5. Configure Supabase Auth with a production SMTP provider, redirect URLs and leaked-password protection.
+6. Add staff only after granular server permissions are validated for their role.
+7. Run acceptance tests with non-real patient data before entering medical or financial information.
+8. Configure Supabase backups, retention, monitoring and an incident/recovery owner.
 
-## LocalStorage mode
+## Production resources
 
-While Firebase is not active, use Settings → Exporter une sauvegarde after meaningful testing sessions. Store the JSON file in a protected location. Restore only a Dental Spa backup created by this application and verify the data after reload.
+- App: <https://dental-spa-taupe.vercel.app/>
+- Booking: <https://dental-spa-taupe.vercel.app/book/consultation>
+- Repository: <https://github.com/drelomrania-dev/Dental-Spa>
+
+## Important limitations
+
+- Do not treat a payment receipt as a legally validated Moroccan invoice template.
+- Do not rely on email invitations until SMTP delivery is tested.
+- Keep real clinical/financial use paused until the remaining permission and ledger acceptance tests in `MVP_TEST_REPORT.md` pass.

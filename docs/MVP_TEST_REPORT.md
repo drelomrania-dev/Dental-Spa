@@ -1,21 +1,26 @@
-# MVP test report
+# Dental Spa MVP — Test report
 
-## Executed
+Date: 2026-10-08  
+Environment: local Vite against production Supabase; Vercel production smoke test.
 
-- JSX/CSS production bundle check with the bundled esbuild runtime — **PASS**.
-- `npm run build` — blocked in the OneDrive checkout because Vite cannot `realpath` the synced workspace path; this is an environment limitation, not a transform failure.
-- Local persistence smoke test — dataStore preserves records between reloads.
-- Domain validation review — appointment overlaps, duplicate payment idempotency keys, and balance derivation are centralized.
-- Browser smoke test against the running local app — dashboard, appointments, payments, clinical, approvals, collection sessions, settings, and public booking routes loaded successfully.
-- Public booking availability check — the occupied `10:30` slot was visibly disabled on the public consultation page.
+| Test | Result | Evidence |
+|---|---|---|
+| Production build | Pass | Vite transformed 1,683 modules; only the existing chunk-size warning remains |
+| Public booking metadata and slots | Pass | Remote RPC returned whitelisted metadata and live 30-minute slots |
+| Booking responsive UI | Pass | 320 px, 390 px and desktop; no horizontal overflow or console errors |
+| Booking conflict protection | Pass at database command level | Advisory lock and slot recheck deployed |
+| Acquisition core journey | Pass | `supabase/tests/acquisition_p0.sql` completed and rolled back |
+| Invalid media token | Pass | `acquisition-media` returned HTTP 401 and created no object |
+| Acquisition mobile UI | Pass | Pipeline, profile and four intake steps checked at 390 px |
+| Remote module route smoke test | Pass | 14 internal routes loaded with no visible data error |
+| Production remote backend | Pass | Root shows Supabase Auth; booking page loads remote clinic data |
 
-## Not yet production-verified
+## Not yet passed
 
-- Two-client Firestore booking race.
-- Firebase Auth role claims and Firestore rules.
-- Browser end-to-end tests.
-- Moroccan legal invoice review.
+- Simultaneous public booking load test with two real HTTP clients.
+- Assistant/direct-API permission matrix.
+- Server-authoritative negotiated-price and payment ledger tests.
+- Payment idempotency, refunds/corrections and immutable receipt tests.
+- Full-day operational journey and cash-session isolation.
 
-## Result
-
-The current repository remains a local/Firebase-ready MVP and is not yet safe for real patient data until authentication, restrictive Firestore rules, backups, and deployment-specific security review are completed.
+No final production-readiness claim is made until the remaining tests pass.

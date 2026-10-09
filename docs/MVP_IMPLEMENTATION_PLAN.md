@@ -1,41 +1,36 @@
-# Dental Spa MVP implementation plan
+# Dental Spa MVP — Implementation plan
 
-## Audit snapshot
+## Current architecture
 
-- Stack: Vite + React 19 + React Router 7, Firebase Firestore optional, localStorage fallback.
-- Existing modules: dashboard, patients, patient profile, appointments, practitioners, services, payments, payment history, receivables, reports, settings.
-- Existing strengths: coherent visual system, shared data context, Firebase-ready persistence, French-first UI.
-- Critical gaps: no authentication or server-side authorization, permissive Firestore rules, payment records are not an immutable ledger, no booking conflict validation, no public booking, no clinical visit/treatment plan model, no price approvals, no collection sessions, and limited auditability.
+- React 19 + Vite single-page application.
+- Supabase Auth, Postgres, RLS, Storage and Edge Functions in production.
+- `patients` and Acquisition use normalized tables; legacy operational modules still use tenant-scoped `app_records` while their normalized migrations are completed.
+- Vercel deploys `main` from `drelomrania-dev/Dental-Spa`.
+
+## Delivery sequence
+
+| Phase | Scope | State | Acceptance checkpoint |
+|---|---|---|---|
+| 0 | Audit, deployment, mobile shell | Complete | Build and Vercel production verified |
+| 1 | Auth, permissions, clinic settings, staff, patients, services | In progress | Backend permission tests pass for every preset |
+| 2 | Internal calendar and public booking | In progress | Public booking is live; cancellation/rescheduling remain |
+| 3 | Visits, treatment plans, quotations | In progress | Existing screens persist remotely; normalized transactional model remains |
+| 4 | Approvals, payments, balances, receipts, corrections | In progress | Existing flow persists remotely; server-authoritative ledger remains |
+| 5 | Collection sessions and role dashboards | In progress | Existing flow persists remotely; scope enforcement remains |
+| 6 | End-to-end, security, recovery and acceptance | In progress | Mandatory journey and permission suite passes |
+| P0 Acquisition | Leads, intake, guided media, quotes, conversion | Complete | Transactional SQL test and mobile UI checks pass |
 
 ## Dependency map
 
-1. Shared data/persistence and clinic settings.
-2. Appointment validation and public booking.
-3. Patient clinical records and treatment plans.
-4. Payment ledger, receipts, balances, and price approvals.
-5. Collection sessions and scoped operational views.
-6. Firebase Auth/custom claims, server-side rules/functions, and end-to-end security tests.
+`Auth + clinic membership → permissions → patients/services/resources → appointments → clinical plans → approvals → payments → collection closing → reporting`.
 
-## Implemented in this pass
+## Main risks
 
-- Expanded persisted collections and seeded realistic operational data.
-- Added clinic configuration defaults, booking links, staff roles, and permission metadata.
-- Added backend-shaped domain helpers for appointment conflict validation, payment idempotency, balances, price approvals, and session totals.
-- Added public booking route and public booking page.
-- Added clinical visits, treatment plans, quotations, negotiated price requests, and collection sessions to the data model.
-- Added operational documentation and a progress/test report.
+- Legacy `app_records` modules need normalized server-side commands before handling real financial or clinical history.
+- Supabase email delivery is rate-limited until a production SMTP provider is configured.
+- Receipt PDF, refunds/corrections, public cancellation/rescheduling and room/chair availability are not yet production-complete.
+- Moroccan invoice and retention requirements require clinic/legal validation.
 
-## Known risks
+## Definition of complete
 
-- localStorage is suitable only for local acceptance testing; it is not a multi-user backend.
-- Firebase Auth/custom claims and callable/server transaction enforcement still need deployment-specific implementation.
-- Moroccan invoice/tax requirements require review with the clinic's accountant before production.
-
-## Acceptance criteria
-
-- A patient can submit a public booking and staff can see it internally.
-- Conflicting practitioner/date/time reservations are rejected by shared domain validation.
-- Payment balances derive from valid ledger entries and duplicate idempotency keys are rejected.
-- Discount requests remain pending until administrator approval.
-- Clinical notes are represented separately from administrative patient data.
-- A collection session can be opened, reconciled, and closed.
+A module is complete only when schema, RLS, server validation, UI, persistence, cross-module links, error handling and tests are all verified. A rendered screen alone is not considered complete.
