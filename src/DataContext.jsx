@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { appointmentOverlaps, createDoc, editDoc, getClinic, listDocs, loadClinic, openBalances, paymentBalance, paymentIdempotencyExists, persistClinic, removeDoc } from './services/dataStore'
+import { useAuth } from './AuthContext'
+import { supabaseEnabled } from './services/supabase'
 
 const DataContext = createContext(null)
 const collections = ['patients','treatments','doctors','appointments','payments','visits','treatmentPlans','priceRequests','collectionSessions','auditEvents','bookingLinks','staff','roles']
@@ -9,6 +11,7 @@ const appointmentTransitions = {
 }
 
 export function DataProvider({ children }){
+  const {access}=useAuth()
   const [data, setData] = useState(Object.fromEntries(collections.map(x => [x, []])))
   const [clinic, setClinicState] = useState(getClinic)
   const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem('dentalflow:currentUser') || 'u1')
@@ -59,14 +62,15 @@ export function DataProvider({ children }){
     treatmentName: id => data.treatments.find(x => x.id === id)?.name || 'Soin',
     balanceFor: (patientId, treatmentId) => paymentBalance(data.payments, patientId, treatmentId),
     balances: openBalances(data.payments),
-    currentUser: data.staff.find(x => x.id === currentUserId) || data.staff[0],
+    currentUser: supabaseEnabled&&access?{id:access.id,name:access.displayName,role:access.role,email:''}:data.staff.find(x => x.id === currentUserId) || data.staff[0],
     can: permission => {
+      if(supabaseEnabled&&access){const permissions=access.permissions||[];return permissions.includes('*')||permissions.some(item=>(typeof item==='string'?item:item.permission)===permission)}
       const user = data.staff.find(x => x.id === currentUserId)
       const roleId = user?.role === 'administrator' ? 'role-admin' : user?.role === 'practitioner' ? 'role-practitioner' : 'role-assistant'
       const role = data.roles.find(x => x.id === roleId)
       return Boolean(role?.permissions?.includes('*') || role?.permissions?.includes(permission))
     }
-  }), [data, currentUserId])
+  }), [data, currentUserId, access])
 
   function switchUser(id){ localStorage.setItem('dentalflow:currentUser', id); setCurrentUserId(id) }
   return <DataContext.Provider value={{ ...data, clinic, loading, dataError, add, update, remove, updateClinic, switchUser, ...helpers }}>{children}</DataContext.Provider>

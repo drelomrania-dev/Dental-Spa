@@ -71,6 +71,8 @@ a{text-decoration:none;color:inherit}
 .session-close{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px;border:1px solid #e7e2ff;background:#faf9ff;border-radius:13px;margin-bottom:18px}.session-close h3{margin:0;font-size:13px}.session-close p{margin:5px 0 0;color:var(--muted);font-size:10px}.session-input{height:38px;border:1px solid var(--line);border-radius:9px;padding:0 10px;width:150px;font-size:11px}.inline-actions{display:flex;gap:5px}.inline-actions .icon-btn{width:28px;height:28px}.form-grid textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px 11px;resize:vertical;font:inherit;font-size:11px}.form-grid textarea:focus{border-color:#9a87ee;outline:0;box-shadow:0 0 0 3px rgba(116,87,246,.08)}@media(max-width:650px){.session-close{align-items:stretch;flex-direction:column}.session-close .form-actions{flex-direction:column}.session-input{width:100%}}
 .role-switch{display:flex;flex-direction:column;gap:7px;font-size:10px;font-weight:700;color:#5f687b}.role-switch select{height:41px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:#fbfcfe;color:var(--ink)}.slot-grid button:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}.public-form .form-error{margin-top:5px}
 .backup-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.backup-file{cursor:pointer}.backup-file input{display:none}
+.current-access-card{padding:14px;border:1px solid var(--line);border-radius:11px;background:#fbfcfe}.current-access-card strong,.current-access-card span{display:block}.current-access-card strong{font-size:12px}.current-access-card span{font-size:9px;color:var(--muted);margin-top:4px;text-transform:capitalize}
+.permission-panel{margin-top:16px}.role-tabs{display:flex;gap:7px;margin-bottom:16px}.role-tabs button{border:1px solid var(--line);border-radius:9px;background:#fbfcfe;color:#697185;padding:9px 12px;font-size:9px;font-weight:700}.role-tabs button.active{background:#7457f6;border-color:#7457f6;color:#fff}.permission-groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.permission-groups>div{border:1px solid var(--line);border-radius:11px;padding:11px;background:#fbfcfe}.permission-groups>div>strong{display:block;font-size:10px;margin-bottom:8px}.permission-groups label{display:flex;align-items:center;gap:7px;padding:6px 0;color:#687184;font-size:8.5px}.permission-groups input{width:15px;height:15px;accent-color:#7457f6}
 .auth-page{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 15% 0%,#ece7ff,#f7f8fb 46%,#eef1f6)}.auth-card{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px;box-shadow:0 24px 70px rgba(26,32,70,.16)}.auth-card h1{margin:0 0 9px;font-size:25px;letter-spacing:-.04em}.auth-card>p{margin:0 0 22px;color:var(--muted);font-size:11px;line-height:1.6}.auth-form{display:flex;flex-direction:column;gap:13px}.auth-form label{font-size:10px;font-weight:700;color:#5f687b}.auth-form input{display:block;width:100%;height:43px;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:0 11px}.auth-switch{display:block;margin:15px auto 0;border:0;background:none;color:#6f52ef;font-size:10px;font-weight:700}
 .access-denied{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}.access-denied svg{color:#cc5361}.access-denied h1{margin:0;font-size:24px}.access-denied p{margin:0 0 8px;color:var(--muted)}.check-label{flex-direction:row!important;align-items:center}.check-label input{width:16px!important;height:16px!important}
 .data-error{margin-bottom:14px;padding:11px 13px;border-radius:10px;background:#ffeded;color:#a73e4a;border:1px solid #ffd2d7;font-size:11px;font-weight:700}
@@ -107,6 +109,7 @@ a{text-decoration:none;color:inherit}
   .payment-layout,.dash-grid,.settings-grid,.dashboard-bottom-grid,.profile-columns{grid-template-columns:minmax(0,1fr)}
   .receipt-panel{position:static}
   .schedule-day{grid-template-columns:1fr;gap:10px}.schedule-date{border-right:0;border-bottom:1px solid var(--line);flex-direction:row;align-items:center;padding:8px 4px 12px}
+  .permission-groups{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
 @media(max-width:650px){
@@ -124,6 +127,7 @@ a{text-decoration:none;color:inherit}
   .public-booking,.auth-page{padding:12px}.public-card,.auth-card{padding:20px 16px;border-radius:18px}.slot-grid{grid-template-columns:repeat(3,1fr)}
   .donut{width:145px;height:145px}.donut:before{width:86px;height:86px}.donut-layout{gap:18px}
   .session-close .form-actions{display:flex;flex-direction:column}
+  .permission-groups{grid-template-columns:1fr}.role-tabs{display:grid;grid-template-columns:1fr 1fr}.role-tabs button{min-height:42px}
 }
 
 @media(max-width:390px){

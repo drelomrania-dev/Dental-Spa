@@ -35,6 +35,14 @@ export async function remoteClinicId(){
   return data
 }
 
+export async function loadCurrentAccessContext(){
+  if(!supabaseEnabled)return null
+  const {data,error}=await supabase.rpc('current_access_context')
+  if(error)throw error
+  if(!data)throw new Error('Aucun profil actif n’est associé à ce compte.')
+  return data
+}
+
 export async function seedRemoteData(){
   const clinicId = await remoteClinicId()
   const { count, error:countError } = await supabase.from('app_records').select('*',{count:'exact',head:true})
