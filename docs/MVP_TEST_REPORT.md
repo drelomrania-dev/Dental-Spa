@@ -1,14 +1,15 @@
 # Dental Spa MVP — Test report
 
-Date: 2026-10-09
+Date: 2026-10-10
 Environment: local Vite against production Supabase; Vercel production smoke test.
 
 | Test | Result | Evidence |
 |---|---|---|
-| Production build | Pass | Vite transformed 1,690 modules; only the existing chunk-size warning remains |
+| Production build | Pass | Vite transformed 1,691 modules; only the existing chunk-size warning remains |
 | Public booking metadata and slots | Pass | Remote RPC returned whitelisted metadata and live 30-minute slots |
 | Booking responsive UI | Pass | 320 px, 390 px and desktop; no horizontal overflow or console errors |
 | Booking conflict protection | Pass at database command level | Advisory lock and slot recheck deployed |
+| Chair/room availability and abuse limit | Pass | `supabase/tests/booking_resources_rate_limits.sql` verified cross-practitioner resource collision rejection, separate-resource concurrency, public resource assignment and rejection of the fourth booking by the same normalized contact, then rolled back |
 | Normalized appointment workflow | Pass | `supabase/tests/appointment_workflows.sql` verified internal creation, overlap rejection, reschedule, status transition, public management, cancellation and event history, then rolled back |
 | Booking → agenda → Acquisition | Pass | `supabase/tests/public_booking_acquisition.sql` verified agenda visibility, `Rendez-vous` Kanban placement, linked history and phone/email deduplication, then rolled back |
 | Public booking management UI | Pass | Live booking form and invalid/expired management-token state verified at 390×844 without submitting patient data |
@@ -30,7 +31,7 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 ## Not yet passed
 
 - Simultaneous public booking load test with two real HTTP clients.
-- Public booking rate-limit/abuse test before large-scale promotion.
+- Optional IP-level edge/WAF throttling test for repeated invalid requests.
 - Browser E2E using a dedicated assistant Auth account (the current project has only the administrator account).
 - Clinic/legal review of Moroccan receipt wording, numbering and retention.
 - Full-day operational journey with two real staff accounts and cash-session isolation.

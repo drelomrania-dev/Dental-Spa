@@ -13,7 +13,7 @@
 |---|---|---|---|
 | 0 | Audit, deployment, mobile shell | Complete | Build and Vercel production verified |
 | 1 | Auth, permissions, clinic settings, staff, patients, services | In progress | Patient basic/medical isolation passes; staff invitation and two-account browser E2E remain |
-| 2 | Internal calendar and public booking | Complete | Normalized agenda plus public booking, secure management, cancellation/rescheduling and Acquisition linkage pass transactional suites |
+| 2 | Internal calendar and public booking | Complete | Normalized agenda, configurable chair/room availability, contact throttling, secure public management and Acquisition linkage pass transactional suites |
 | 3 | Visits, treatment plans, quotations | Complete | Transactional visit → plan → negotiated approval → finance-price suite passes |
 | 4 | Approvals, payments, balances, receipts, corrections | Complete for MVP | Transactional ledger, balances, receipt snapshots, linked corrections and downloadable PDF pass; legal wording remains external validation |
 | 5 | Collection sessions and role dashboards | In progress | Normalized session open/submit/validate and cash reconciliation pass; two-account browser E2E remains |
@@ -27,7 +27,7 @@
 ## Main risks
 
 - Supabase email delivery is rate-limited until a production SMTP provider is configured.
-- Booking-endpoint rate limiting and advanced room/chair availability are not yet production-complete.
+- Contact-level booking throttling is enforced in Postgres; optional IP-level edge/WAF throttling would add protection for repeated invalid requests.
 - Staff invitation depends on production SMTP and still needs a second real Auth account for browser verification.
 - Moroccan invoice and retention requirements require clinic/legal validation.
 

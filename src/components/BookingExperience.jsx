@@ -67,8 +67,10 @@ export default function BookingExperience({config,getSlots,onBook}){
       const booking=await onBook({...contact,date:selectedDate,time:selectedTime})
       setDone(booking)
     } catch(err){
-      const unavailable=String(err?.message||'').toLowerCase().includes('slot')
-      setError(unavailable?'Ce créneau vient d’être réservé. Choisissez une autre heure.':'Impossible d’enregistrer le rendez-vous. Vérifiez vos informations puis réessayez.')
+      const message=String(err?.message||'').toLowerCase()
+      const unavailable=message.includes('slot')
+      const rateLimited=message.includes('rate limit')
+      setError(rateLimited?'Trop de réservations ont été envoyées avec ces coordonnées. Réessayez dans 30 minutes.':unavailable?'Ce créneau vient d’être réservé. Choisissez une autre heure.':'Impossible d’enregistrer le rendez-vous. Vérifiez vos informations puis réessayez.')
       if(unavailable){setStep('schedule');const refreshed=await getSlots(selectedDate).catch(()=>[]);setSlots(refreshed);setSelectedTime('')}
     } finally { setSubmitting(false) }
   }

@@ -6,7 +6,7 @@ import { correctFinancePayment, getFinanceBalance } from './services/finance'
 import { decideClinicalPrice as decideClinicalPriceRemote, recordClinicalVisit as recordClinicalVisitRemote, requestClinicalPrice as requestClinicalPriceRemote } from './services/clinical'
 
 const DataContext = createContext(null)
-const collections = ['patients','treatments','doctors','appointments','payments','visits','treatmentPlans','priceRequests','collectionSessions','auditEvents','bookingLinks','staff','roles']
+const collections = ['patients','treatments','doctors','resources','appointments','payments','visits','treatmentPlans','priceRequests','collectionSessions','auditEvents','bookingLinks','staff','roles']
 const appointmentTransitions = {
   'En attente':['Confirmé','Annulé'], 'Confirmé':['Arrivé','Annulé','No-show'], 'Arrivé':['En attente clinique','En consultation','Annulé'],
   'En attente clinique':['En consultation','Annulé'], 'En consultation':['Terminé','Annulé'], 'Terminé':[], 'Annulé':[], 'No-show':[]

@@ -19,11 +19,15 @@ export const seedData = {
     { id:'d2', name:'Dr. N. Karim', specialty:'Orthodontie', phone:'+212 5 22 00 00 02', email:'ortho@clinic.ma', availability:'Mar–Sam', color:'#1eb980', active:true },
     { id:'d3', name:'Dr. S. Amine', specialty:'Implantologie', phone:'+212 5 22 00 00 03', email:'implant@clinic.ma', availability:'Lun–Jeu', color:'#ff9f43', active:true }
   ],
+  resources: [
+    { id:'chair-1', name:'Fauteuil 1', type:'chair', active:true },
+    { id:'room-1', name:'Salle de soins 1', type:'room', active:true }
+  ],
   appointments: [
-    { id:'a1', patientId:'p1', doctorId:'d1', date:'2026-10-07', time:'09:00', duration:45, reason:'Détartrage', status:'Confirmé' },
-    { id:'a2', patientId:'p2', doctorId:'d3', date:'2026-10-07', time:'11:30', duration:60, reason:'Consultation implant', status:'Confirmé' },
-    { id:'a3', patientId:'p3', doctorId:'d2', date:'2026-10-07', time:'14:00', duration:45, reason:'Contrôle orthodontie', status:'En attente' },
-    { id:'a4', patientId:'p4', doctorId:'d1', date:'2026-10-08', time:'10:30', duration:30, reason:'Consultation', status:'Confirmé' }
+    { id:'a1', patientId:'p1', doctorId:'d1', roomId:'chair-1', date:'2026-10-07', time:'09:00', duration:45, reason:'Détartrage', status:'Confirmé' },
+    { id:'a2', patientId:'p2', doctorId:'d3', roomId:'room-1', date:'2026-10-07', time:'11:30', duration:60, reason:'Consultation implant', status:'Confirmé' },
+    { id:'a3', patientId:'p3', doctorId:'d2', roomId:'chair-1', date:'2026-10-07', time:'14:00', duration:45, reason:'Contrôle orthodontie', status:'En attente' },
+    { id:'a4', patientId:'p4', doctorId:'d1', roomId:'chair-1', date:'2026-10-08', time:'10:30', duration:30, reason:'Consultation', status:'Confirmé' }
   ],
   payments: [
     { id:'pay1', patientId:'p1', treatmentId:'t3', doctorId:'d1', date:'2026-10-07', total:600, paid:600, remaining:0, plan:'Comptant', method:'Carte', status:'Payé', reference:'REC-1001' },
@@ -37,7 +41,7 @@ export const seedData = {
   collectionSessions: [],
   auditEvents: [],
   bookingLinks: [
-    { id:'bl1', slug:'consultation', title:'Réserver une consultation', description:'Un premier échange avec notre équipe dentaire.', treatmentId:'t1', doctorId:'', duration:30, published:true, confirmationPolicy:'auto' }
+    { id:'bl1', slug:'consultation', title:'Réserver une consultation', description:'Un premier échange avec notre équipe dentaire.', treatmentId:'t1', doctorId:'', roomId:'chair-1', duration:30, published:true, confirmationPolicy:'auto' }
   ],
   staff: [
     { id:'u1', name:'Administrateur', role:'administrator', email:'admin@dentalspa.ma', active:true },

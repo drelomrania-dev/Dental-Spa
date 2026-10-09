@@ -6,11 +6,12 @@ import { useData } from '../DataContext'
 import { money, todayISO } from '../utils'
 
 export default function Appointments(){
-  const { appointments,patients,doctors,treatments,add,update,patientName,doctorName } = useData()
+  const { appointments,patients,doctors,treatments,resources,add,update,patientName,doctorName } = useData()
   const [open,setOpen]=useState(false)
   const [editingId,setEditingId]=useState(null)
   const [error,setError]=useState('');const [saving,setSaving]=useState(false)
-  const [form,setForm]=useState({patientId:'',doctorId:'',treatmentId:'',estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'})
+  const defaultResource=resources.find(resource=>resource.active)?.id||''
+  const [form,setForm]=useState({patientId:'',doctorId:'',treatmentId:'',roomId:'',estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'})
   const grouped=useMemo(()=>Object.entries(appointments.reduce((a,x)=>{(a[x.date]??=[]).push(x);return a},{})).sort(([a],[b])=>a.localeCompare(b)),[appointments])
   const selectedPatient=patients.find(p=>p.id===form.patientId)
   const selectedTreatment=treatments.find(t=>t.id===form.treatmentId)
@@ -18,7 +19,7 @@ export default function Appointments(){
     return treatments.find(t=>t.id===appointment.treatmentId)
       || treatments.find(t=>t.name.trim().toLocaleLowerCase()===String(appointment.reason||'').trim().toLocaleLowerCase())
   }
-  function newAppointment(){setEditingId(null);setError('');setForm({patientId:'',doctorId:'',treatmentId:'',estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'});setOpen(true)}
+  function newAppointment(){setEditingId(null);setError('');setForm({patientId:'',doctorId:'',treatmentId:'',roomId:defaultResource,estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'});setOpen(true)}
   function editAppointment(appointment){
     const treatment=treatmentFor(appointment)
     setEditingId(appointment.id)
@@ -47,7 +48,7 @@ export default function Appointments(){
         return <div className="booking-card" key={a.id}>
           <div className="booking-time">{a.time}</div>
           <div className="booking-patient"><strong>{patientName(a.patientId)}</strong><span className="booking-reason">{a.reason || 'Consultation'}</span><span>{patient?.phone || 'Téléphone non renseigné'}</span></div>
-          <div className="booking-provider"><strong>{doctorName(a.doctorId)}</strong><span>{a.duration} min</span></div>
+          <div className="booking-provider"><strong>{doctorName(a.doctorId)}</strong><span>{a.duration} min · {resources.find(resource=>resource.id===a.roomId)?.name||'Ressource non assignée'}</span></div>
           <div className="booking-cost"><span>À payer</span><strong>{a.estimatedAmount!==undefined&&a.estimatedAmount!==''?money(a.estimatedAmount):treatment?money(treatment.price):'À préciser'}</strong></div>
           <div className="booking-actions"><span className={`status ${a.status==='Confirmé'?'ok':'wait'}`}>{a.status}</span><button className="appointment-edit" type="button" title="Modifier le rendez-vous" aria-label={`Modifier le rendez-vous de ${patientName(a.patientId)}`} onClick={()=>editAppointment(a)}><Pencil size={14}/></button></div>
         </div>
@@ -57,6 +58,7 @@ export default function Appointments(){
       <form onSubmit={submit} className="form-grid">
         <label>Patient<select required value={form.patientId} onChange={e=>setForm({...form,patientId:e.target.value})}><option value="">Choisir</option>{patients.map(p=><option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}</select>{selectedPatient&&<small className="appointment-phone">Téléphone : {selectedPatient.phone || 'non renseigné'}</small>}</label>
         <label>Praticien<select required value={form.doctorId} onChange={e=>setForm({...form,doctorId:e.target.value})}><option value="">Choisir</option>{doctors.map(d=><option key={d.id} value={d.id}>{d.name}</option>)}</select></label>
+        <label>Fauteuil / salle<select required={resources.some(resource=>resource.active)} value={form.roomId||''} onChange={e=>setForm({...form,roomId:e.target.value})}><option value="">{resources.some(resource=>resource.active)?'Choisir':'Aucune ressource active'}</option>{resources.filter(resource=>resource.active||resource.id===form.roomId).map(resource=><option key={resource.id} value={resource.id}>{resource.name} · {resource.type==='chair'?'Fauteuil':'Salle'}</option>)}</select></label>
         <label>Date<input required type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></label>
         <label>Heure<input required type="time" value={form.time} onChange={e=>setForm({...form,time:e.target.value})}/></label>
         <label>Soin prévu<select value={form.treatmentId} onChange={e=>{const id=e.target.value;const treatment=treatments.find(t=>t.id===id);setForm({...form,treatmentId:id,reason:treatment?.name||form.reason,estimatedAmount:treatment?.price??form.estimatedAmount})}}><option value="">Choisir un soin (facultatif)</option>{treatments.filter(t=>t.active).map(t=><option key={t.id} value={t.id}>{t.name} · {money(t.price)}</option>)}</select></label>

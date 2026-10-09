@@ -2,10 +2,10 @@
 
 ## Booking
 
-**Implemented:** Calendly-style public calendar, live slots, normalized internal agenda, transactional conflict checks, patient/lead deduplication, secure management links, public rescheduling/cancellation, references and responsive layouts. Every public booking is linked to the patient agenda and to the Acquisition `Rendez-vous` stage with an auditable history.
-**Verified:** Appointment and booking-to-Acquisition SQL suites, rollback cleanup, 390 px and desktop public UI, invalid-token management UI and production build.
-**Remaining:** Configurable room/chair availability and public-endpoint rate limiting.
-**Risks / blockers:** None for the core booking-to-agenda-to-pipeline journey; advanced resource availability remains.
+**Implemented:** Calendly-style public calendar, live slots, normalized internal agenda, transactional practitioner and chair/room conflict checks, configurable active resources, booking-link resource assignment, patient/lead deduplication, contact-level abuse limits, secure management links, public rescheduling/cancellation, references and responsive layouts. Every public booking is linked to the patient agenda and to the Acquisition `Rendez-vous` stage with an auditable history.
+**Verified:** Appointment, resource/rate-limit and booking-to-Acquisition SQL suites, rollback cleanup, 390 px and desktop public UI, invalid-token management UI and production build.
+**Remaining:** Optional IP-level edge/WAF throttling for failed requests and a simultaneous two-client HTTP load test.
+**Risks / blockers:** None for the core booking-to-agenda-to-pipeline journey.
 
 ## Acquisition & conversion
 

@@ -6,6 +6,7 @@ import { loadFinanceSnapshot, openFinanceSession, recordFinancePayment, submitFi
 import { loadClinicalSnapshot } from './clinical'
 import { createAppointment, loadAppointments, updateAppointment } from './appointments'
 import { createPatient, deletePatient, loadPatients, updatePatient } from './patients'
+import { loadResources, saveResource } from './resources'
 
 const PREFIX = 'dentalflow:'
 
@@ -36,6 +37,7 @@ export async function listDocs(name){
     }
     if(name==='appointments')return loadAppointments()
     if(name==='patients')return loadPatients()
+    if(name==='resources')return loadResources()
     const clinicId = await remoteClinicId()
     const { data, error } = await supabase.from('app_records').select('id,data').eq('clinic_id',clinicId).eq('collection',name).order('updated_at',{ascending:false})
     if(error) throw error
@@ -51,6 +53,7 @@ export async function createDoc(name, data){
     if(name==='payments') return recordFinancePayment(data)
     if(name==='collectionSessions') return openFinanceSession(data.openingCash)
     if(name==='appointments')return createAppointment(data)
+    if(name==='resources')return saveResource(data)
     const id = data.id || crypto.randomUUID(); const payload = { ...data, id }
     if(name==='patients')return createPatient(payload)
     const clinicId = await remoteClinicId()
@@ -77,6 +80,7 @@ export async function editDoc(name, id, patch){
       throw new Error('Transition de session de caisse non prise en charge.')
     }
     if(name==='appointments')return updateAppointment(id,patch)
+    if(name==='resources')return saveResource({...patch,id})
     if(name==='patients')return updatePatient(id,patch)
     const clinicId = await remoteClinicId()
     const { data:row, error:readError } = await supabase.from('app_records').select('data').eq('clinic_id',clinicId).eq('collection',name).eq('id',id).single()
