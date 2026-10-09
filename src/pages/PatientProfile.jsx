@@ -1,13 +1,15 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CalendarDays, CreditCard, Mail, Phone, UserRound, WalletCards } from 'lucide-react'
+import { ArrowLeft, CalendarDays, CreditCard, Mail, Phone, ShieldAlert, UserRound, WalletCards } from 'lucide-react'
 import Topbar from '../components/Topbar'
 import { useData } from '../DataContext'
 import { money, todayISO } from '../utils'
+import { loadPatientMedical } from '../services/patients'
 
 export default function PatientProfile(){
   const { patientId } = useParams()
-  const { patients, appointments, payments, balances, loading, doctorName, treatmentName } = useData()
+  const { patients, appointments, payments, balances, loading, doctorName, treatmentName, can } = useData()
+  const [medical,setMedical]=useState(null);const [medicalError,setMedicalError]=useState('')
   const patient = patients.find(p => p.id === patientId)
   const patientAppointments = useMemo(() => appointments
     .filter(a => a.patientId === patientId)
@@ -15,6 +17,7 @@ export default function PatientProfile(){
   const patientPayments = useMemo(() => payments
     .filter(p => p.patientId === patientId)
     .sort((a,b) => `${b.date} ${b.reference}`.localeCompare(`${a.date} ${a.reference}`)), [payments, patientId])
+  useEffect(()=>{let live=true;if(!can('patients.medical.view'))return()=>{live=false};loadPatientMedical(patientId).then(value=>{if(live)setMedical(value)}).catch(()=>{if(live)setMedicalError('Les informations médicales ne sont pas disponibles.')});return()=>{live=false}},[patientId,can])
 
   if (loading) return <Topbar title="Chargement du profil…" subtitle="Récupération des informations du patient."/>
 
@@ -41,6 +44,7 @@ export default function PatientProfile(){
         <div><Mail size={16}/><span>{patient.email || 'Email non renseigné'}</span></div>
       </div>
     </section>
+    {can('patients.medical.view')&&<section className="panel patient-medical-summary"><div><ShieldAlert size={18}/><span><strong>Alertes médicales</strong><small>Visible uniquement par les profils cliniques autorisés</small></span></div>{medicalError?<p className="danger-text">{medicalError}</p>:<p>{medical?.medicalAlerts||'Aucune alerte médicale enregistrée.'}</p>}</section>}
     <div className="profile-stats">
       <div className="panel"><span><CalendarDays size={15}/> Rendez-vous à venir</span><strong>{upcoming.length}</strong></div>
       <div className="panel"><span><CreditCard size={15}/> Total payé</span><strong>{money(totalPaid)}</strong></div>

@@ -22,8 +22,7 @@ declare
 begin
   if clinic is null then raise exception 'Missing administrator clinic context'; end if;
 
-  insert into patients(clinic_id,app_id,first_name,last_name,phone,status)
-  values(clinic,'qa-finance-patient','Test','Finance','0600000001','Actif');
+  perform create_patient_record(jsonb_build_object('id','qa-finance-patient','firstName','Test','lastName','Finance','phone','0600000001','status','Actif'));
   insert into app_records(clinic_id,collection,id,data)
   values(clinic,'treatments','qa-finance-treatment',jsonb_build_object('id','qa-finance-treatment','name','Test finance','price',1000,'active',true));
 

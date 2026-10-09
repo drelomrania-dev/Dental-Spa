@@ -5,7 +5,7 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 
 | Test | Result | Evidence |
 |---|---|---|
-| Production build | Pass | Vite transformed 1,688 modules; only the existing chunk-size warning remains |
+| Production build | Pass | Vite transformed 1,689 modules; only the existing chunk-size warning remains |
 | Public booking metadata and slots | Pass | Remote RPC returned whitelisted metadata and live 30-minute slots |
 | Booking responsive UI | Pass | 320 px, 390 px and desktop; no horizontal overflow or console errors |
 | Booking conflict protection | Pass at database command level | Advisory lock and slot recheck deployed |
@@ -23,6 +23,8 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 | Finance browser UI | Pass | Remote history, correction modal and authoritative balance verified; 390×844 payment form has no horizontal overflow and a 45 px primary action |
 | Clinical workflow transaction | Pass | Temporary assistant request → administrator approval → plan repricing → finance price resolution, all rolled back |
 | Clinical browser UI | Pass | Remote clinical and negotiated-price pages plus both creation modals load without writing patient data |
+| Patient privacy boundary | Pass | `supabase/tests/patient_access.sql` verified basic reception access, medical-data denial, direct-table denial and administrator medical access, then rolled back |
+| Patient regression suite | Pass | Acquisition, finance, clinical, appointment and booking bridge suites all pass after the patient RPC migration; zero QA patients, medical records or Auth users remain |
 
 ## Not yet passed
 

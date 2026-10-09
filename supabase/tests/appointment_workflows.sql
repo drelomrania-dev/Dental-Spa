@@ -10,7 +10,7 @@ declare clinic uuid:=current_clinic_id(); patient_app text; practitioner_app tex
   created jsonb; updated jsonb; public_date date:=current_date+30; public_date_2 date; slots jsonb; slots_2 jsonb; booked jsonb; managed jsonb; moved jsonb; cancelled jsonb; token text;
 begin
   while extract(isodow from test_date)=7 loop test_date:=test_date+1; end loop;
-  select app_id into patient_app from patients where clinic_id=clinic order by created_at limit 1;
+  select row->>'id' into patient_app from jsonb_array_elements(patients_snapshot()) row limit 1;
   select id into practitioner_app from app_records where clinic_id=clinic and collection='doctors' order by id limit 1;
   select id into service_app from app_records where clinic_id=clinic and collection='treatments' order by id limit 1;
 

@@ -16,8 +16,7 @@ from staff_profiles where id=current_setting('qa.admin_id')::uuid;
 select set_config('request.jwt.claim.sub',current_setting('qa.admin_id'),true);
 set local role authenticated;
 
-insert into patients(clinic_id,app_id,first_name,last_name,phone,status)
-values(current_clinic_id(),'qa-clinical-patient','Test','Clinique','0600000002','Actif');
+select create_patient_record(jsonb_build_object('id','qa-clinical-patient','firstName','Test','lastName','Clinique','phone','0600000002','status','Actif'));
 
 do $visit_test$
 declare doctor_app text; service_app text; result jsonb; snapshot jsonb;

@@ -2,7 +2,7 @@ import { remoteClinicId, supabase, supabaseEnabled } from './supabase'
 
 export const permissionCatalog=[
   ['Rendez-vous',['appointments.view','appointments.create','appointments.edit','appointments.cancel']],
-  ['Patients',['patients.basic.view','patients.create','patients.edit','patients.medical.view']],
+  ['Patients',['patients.basic.view','patients.create','patients.edit','patients.medical.view','patients.medical.edit']],
   ['Clinique',['clinical.view','clinical.edit','plans.create']],
   ['Services & prix',['services.view','services.manage','priceRequests.create','priceRequests.approve']],
   ['Paiements',['payments.collect','payments.receipt','payments.view.own','payments.view.all','payments.correct']],

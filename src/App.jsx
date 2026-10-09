@@ -30,8 +30,8 @@ import './styles.css'
 
 function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
     <Route path="/" element={<Dashboard/>}/>
-    <Route path="/patients" element={<Patients/>}/>
-    <Route path="/patients/:patientId" element={<PatientProfile/>}/>
+    <Route path="/patients" element={<RequirePermission permission="patients.basic.view" roles={['administrator']}><Patients/></RequirePermission>}/>
+    <Route path="/patients/:patientId" element={<RequirePermission permission="patients.basic.view" roles={['administrator']}><PatientProfile/></RequirePermission>}/>
     <Route path="/acquisition" element={<RequirePermission roles={['administrator','assistant','practitioner']}><Acquisition/></RequirePermission>}/>
     <Route path="/acquisition/:leadId" element={<RequirePermission roles={['administrator','assistant','practitioner']}><LeadProfile/></RequirePermission>}/>
     <Route path="/payments" element={<RequirePermission permission="payments.collect" roles={['administrator']}><Payments/></RequirePermission>}/>

@@ -6,7 +6,7 @@ import Modal from '../components/Modal'
 import { useData } from '../DataContext'
 
 export default function Patients(){
-  const { patients, payments, add } = useData()
+  const { patients, payments, add, can } = useData()
   const [query,setQuery] = useState('')
   const [open,setOpen] = useState(false)
   const [form,setForm] = useState({firstName:'',lastName:'',phone:'',email:''})
@@ -21,7 +21,7 @@ export default function Patients(){
   return <>
     <Topbar title="Patients" subtitle="Dossiers simples, coordonnées et activité de paiement."/>
     <section className="panel">
-      <div className="toolbar"><div className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Rechercher un patient…"/></div><button className="primary-btn" onClick={()=>setOpen(true)}><Plus size={18}/> Ajouter un patient</button></div>
+      <div className="toolbar"><div className="search-box"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Rechercher un patient…"/></div>{can('patients.create')&&<button className="primary-btn" onClick={()=>setOpen(true)}><Plus size={18}/> Ajouter un patient</button>}</div>
       <div className="table-wrap"><table><thead><tr><th>Patient</th><th>Téléphone</th><th>Email</th><th>Depuis</th><th>Paiements</th><th>Statut</th></tr></thead><tbody>
         {rows.map(p=><tr key={p.id}><td><div className="person-cell"><div className="mini-avatar"><UserRound size={16}/></div><Link className="patient-link" to={`/patients/${p.id}`}><strong>{p.firstName} {p.lastName}</strong><ArrowUpRight size={13}/></Link></div></td><td>{p.phone||'—'}</td><td>{p.email||'—'}</td><td>{p.createdAt}</td><td>{payments.filter(x=>x.patientId===p.id).length}</td><td><span className="status ok">{p.status}</span></td></tr>)}
         {!rows.length&&<tr><td colSpan="6"><div className="empty-state">Aucun patient ne correspond à cette recherche.</div></td></tr>}

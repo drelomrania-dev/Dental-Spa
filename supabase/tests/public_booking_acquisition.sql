@@ -25,7 +25,6 @@ begin
   second_booking:=public_create_booking('consultation',second_date,second_slots->>0,'Test','Pipeline','06 00 00 00 04','QA-PIPELINE@example.invalid');
   if second_booking->>'leadId'<>lead_uuid::text then raise exception 'Repeated contact created another lead'; end if;
   if (select count(*) from leads where clinic_id=clinic and (phone in ('0600000004','06 00 00 00 04') or lower(email)='qa-pipeline@example.invalid'))<>1 then raise exception 'Lead deduplication failed'; end if;
-  if (select count(*) from patients where clinic_id=clinic and (phone in ('0600000004','06 00 00 00 04') or lower(email)='qa-pipeline@example.invalid'))<>1 then raise exception 'Patient deduplication failed'; end if;
 end
 $booking_bridge_test$;
 
@@ -35,6 +34,7 @@ declare lead_uuid uuid;
 begin
   select id into lead_uuid from leads where lower(email)='qa-pipeline@example.invalid' limit 1;
   if not exists(select 1 from appointments a join patients p on p.id=a.patient_id where p.phone='0600000004' and a.lead_id=lead_uuid) then raise exception 'Patient appointment is missing from normalized agenda storage'; end if;
+  if (select count(*) from patients where regexp_replace(coalesce(phone,''),'[^0-9]','','g')='0600000004' or lower(email)='qa-pipeline@example.invalid')<>1 then raise exception 'Patient deduplication failed'; end if;
 end
 $booking_storage_test$;
 

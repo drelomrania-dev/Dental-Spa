@@ -5,6 +5,7 @@ import { remoteClinicId, supabase, supabaseEnabled } from './supabase'
 import { loadFinanceSnapshot, openFinanceSession, recordFinancePayment, submitFinanceSession, validateFinanceSession } from './finance'
 import { loadClinicalSnapshot } from './clinical'
 import { createAppointment, loadAppointments, updateAppointment } from './appointments'
+import { createPatient, deletePatient, loadPatients, updatePatient } from './patients'
 
 const PREFIX = 'dentalflow:'
 
@@ -23,9 +24,6 @@ function localSave(name, rows){
   localStorage.setItem(PREFIX + name, JSON.stringify(rows))
 }
 
-function patientFromRow(row){ return {id:row.app_id,firstName:row.first_name,lastName:row.last_name,phone:row.phone||'',email:row.email||'',dateOfBirth:row.date_of_birth||'',address:row.address||'',medicalAlerts:row.medical_alerts||'',status:row.status,createdAt:String(row.created_at||'').slice(0,10)} }
-function patientToRow(data,clinicId){ return {clinic_id:clinicId,app_id:data.id,first_name:data.firstName,last_name:data.lastName,phone:data.phone||null,email:data.email||null,date_of_birth:data.dateOfBirth||null,address:data.address||null,medical_alerts:data.medicalAlerts||null,status:data.status||'Actif'} }
-
 export async function listDocs(name){
   if (supabaseEnabled){
     if(name==='payments'||name==='collectionSessions'){
@@ -37,12 +35,8 @@ export async function listDocs(name){
       return snapshot[name]
     }
     if(name==='appointments')return loadAppointments()
+    if(name==='patients')return loadPatients()
     const clinicId = await remoteClinicId()
-    if(name==='patients'){
-      const {data,error}=await supabase.from('patients').select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').eq('clinic_id',clinicId).order('created_at',{ascending:false})
-      if(error)throw error
-      return data.map(patientFromRow)
-    }
     const { data, error } = await supabase.from('app_records').select('id,data').eq('clinic_id',clinicId).eq('collection',name).order('updated_at',{ascending:false})
     if(error) throw error
     return data.map(row => ({ ...row.data, id:row.id }))
@@ -57,12 +51,9 @@ export async function createDoc(name, data){
     if(name==='payments') return recordFinancePayment(data)
     if(name==='collectionSessions') return openFinanceSession(data.openingCash)
     if(name==='appointments')return createAppointment(data)
-    const id = data.id || crypto.randomUUID(); const clinicId = await remoteClinicId(); const payload = { ...data, id }
-    if(name==='patients'){
-      const {data:row,error}=await supabase.from('patients').insert(patientToRow(payload,clinicId)).select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').single()
-      if(error)throw error
-      return patientFromRow(row)
-    }
+    const id = data.id || crypto.randomUUID(); const payload = { ...data, id }
+    if(name==='patients')return createPatient(payload)
+    const clinicId = await remoteClinicId()
     const { error } = await supabase.from('app_records').insert({clinic_id:clinicId,collection:name,id,data:payload})
     if(error) throw error
     return payload
@@ -86,15 +77,8 @@ export async function editDoc(name, id, patch){
       throw new Error('Transition de session de caisse non prise en charge.')
     }
     if(name==='appointments')return updateAppointment(id,patch)
+    if(name==='patients')return updatePatient(id,patch)
     const clinicId = await remoteClinicId()
-    if(name==='patients'){
-      const {data:existing,error:readError}=await supabase.from('patients').select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').eq('clinic_id',clinicId).eq('app_id',id).single()
-      if(readError)throw readError
-      const next={...patientFromRow(existing),...patch,id}; const row=patientToRow(next,clinicId); delete row.app_id; delete row.clinic_id
-      const {error}=await supabase.from('patients').update(row).eq('clinic_id',clinicId).eq('app_id',id)
-      if(error)throw error
-      return next
-    }
     const { data:row, error:readError } = await supabase.from('app_records').select('data').eq('clinic_id',clinicId).eq('collection',name).eq('id',id).single()
     if(readError) throw readError
     const next = { ...row.data, ...patch, id }
@@ -113,12 +97,8 @@ export async function editDoc(name, id, patch){
 
 export async function removeDoc(name, id){
   if (supabaseEnabled){
+    if(name==='patients')return deletePatient(id)
     const clinicId = await remoteClinicId()
-    if(name==='patients'){
-      const {error}=await supabase.from('patients').delete().eq('clinic_id',clinicId).eq('app_id',id)
-      if(error)throw error
-      return
-    }
     const { error } = await supabase.from('app_records').delete().eq('clinic_id',clinicId).eq('collection',name).eq('id',id)
     if(error) throw error
     return

@@ -49,7 +49,7 @@ begin
 
   converted:=convert_lead_to_patient(test_lead_id);
   if converted->>'patientId' is null then raise exception 'Patient conversion failed'; end if;
-  if not exists(select 1 from patients where clinic_id=clinic and app_id=converted->>'patientId') then raise exception 'Converted patient missing'; end if;
+  if not exists(select 1 from jsonb_array_elements(patients_snapshot()) row where row->>'id'=converted->>'patientId') then raise exception 'Converted patient missing'; end if;
 end
 $test$;
 
