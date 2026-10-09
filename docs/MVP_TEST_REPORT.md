@@ -5,7 +5,7 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 
 | Test | Result | Evidence |
 |---|---|---|
-| Production build | Pass | Vite transformed 1,689 modules; only the existing chunk-size warning remains |
+| Production build | Pass | Vite transformed 1,690 modules; only the existing chunk-size warning remains |
 | Public booking metadata and slots | Pass | Remote RPC returned whitelisted metadata and live 30-minute slots |
 | Booking responsive UI | Pass | 320 px, 390 px and desktop; no horizontal overflow or console errors |
 | Booking conflict protection | Pass at database command level | Advisory lock and slot recheck deployed |
@@ -25,13 +25,14 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 | Clinical browser UI | Pass | Remote clinical and negotiated-price pages plus both creation modals load without writing patient data |
 | Patient privacy boundary | Pass | `supabase/tests/patient_access.sql` verified basic reception access, medical-data denial, direct-table denial and administrator medical access, then rolled back |
 | Patient regression suite | Pass | Acquisition, finance, clinical, appointment and booking bridge suites all pass after the patient RPC migration; zero QA patients, medical records or Auth users remain |
+| Downloadable payment receipt | Pass | Browser-native PDF generator produced a valid one-page A4 receipt; Poppler rendering showed no clipping/overlap and pypdf verified French accents and payment fields |
 
 ## Not yet passed
 
 - Simultaneous public booking load test with two real HTTP clients.
 - Public booking rate-limit/abuse test before large-scale promotion.
 - Browser E2E using a dedicated assistant Auth account (the current project has only the administrator account).
-- Downloadable PDF receipt rendering and legal wording review.
+- Clinic/legal review of Moroccan receipt wording, numbering and retention.
 - Full-day operational journey with two real staff accounts and cash-session isolation.
 
 No final production-readiness claim is made until the remaining tests pass.

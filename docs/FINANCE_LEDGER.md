@@ -23,4 +23,6 @@ Run `supabase/tests/finance_ledger.sql` against a development database with an a
 
 ## Known product boundary
 
-The on-screen receipt can be printed from the browser. A clinic-branded downloadable PDF and final Moroccan fiscal/legal wording still require implementation and clinic/legal validation.
+The on-screen receipt can be printed from the browser and downloaded as a clinic-branded A4 PDF after collection or from payment history. Payment and correction PDFs use the immutable ledger snapshot and are gated by `payments.receipt`.
+
+The PDF is explicitly labelled as a payment receipt rather than a fiscal invoice. Final Moroccan fiscal/legal wording, numbering and retention still require clinic/legal validation.

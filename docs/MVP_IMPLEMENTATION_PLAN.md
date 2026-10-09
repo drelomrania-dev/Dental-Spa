@@ -15,7 +15,7 @@
 | 1 | Auth, permissions, clinic settings, staff, patients, services | In progress | Patient basic/medical isolation passes; staff invitation and two-account browser E2E remain |
 | 2 | Internal calendar and public booking | Complete | Normalized agenda plus public booking, secure management, cancellation/rescheduling and Acquisition linkage pass transactional suites |
 | 3 | Visits, treatment plans, quotations | Complete | Transactional visit → plan → negotiated approval → finance-price suite passes |
-| 4 | Approvals, payments, balances, receipts, corrections | In progress | Transactional ledger, balances, receipt snapshots and corrections pass; downloadable PDF remains |
+| 4 | Approvals, payments, balances, receipts, corrections | Complete for MVP | Transactional ledger, balances, receipt snapshots, linked corrections and downloadable PDF pass; legal wording remains external validation |
 | 5 | Collection sessions and role dashboards | In progress | Normalized session open/submit/validate and cash reconciliation pass; two-account browser E2E remains |
 | 6 | End-to-end, security, recovery and acceptance | In progress | Mandatory journey and permission suite passes |
 | P0 Acquisition | Leads, intake, guided media, quotes, conversion | Complete | Transactional SQL test and mobile UI checks pass |
@@ -27,7 +27,7 @@
 ## Main risks
 
 - Supabase email delivery is rate-limited until a production SMTP provider is configured.
-- Receipt PDF, booking-endpoint rate limiting and advanced room/chair availability are not yet production-complete.
+- Booking-endpoint rate limiting and advanced room/chair availability are not yet production-complete.
 - Staff invitation depends on production SMTP and still needs a second real Auth account for browser verification.
 - Moroccan invoice and retention requirements require clinic/legal validation.
 

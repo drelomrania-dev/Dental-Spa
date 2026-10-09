@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, Printer, ReceiptText } from 'lucide-react'
+import { CheckCircle2, FileDown, Printer, ReceiptText } from 'lucide-react'
 import Topbar from '../components/Topbar'
 import { useData } from '../DataContext'
 import { money, todayISO } from '../utils'
+import { downloadPaymentReceiptPdf } from '../services/receiptPdf'
 
 export default function Payments(){
-  const { patients,treatments,doctors,payments,priceRequests,collectionSessions,currentUser,add,patientName,treatmentName,balanceFor,financeBalance } = useData()
+  const { patients,treatments,doctors,payments,priceRequests,collectionSessions,currentUser,clinic,add,patientName,treatmentName,balanceFor,financeBalance,can } = useData()
   const [form,setForm] = useState({patientId:'',treatmentId:'',doctorId:'',plan:'Comptant',paid:'',method:'Carte'})
   const [receipt,setReceipt] = useState(null)
   const [remoteLedger,setRemoteLedger] = useState(null)
@@ -36,6 +37,7 @@ export default function Payments(){
   },[form.patientId,form.treatmentId,payments.length,financeBalance])
   const paid = Number(form.paid||0)
   const remaining = Math.max(0,amountDue-paid)
+  const downloadReceipt=()=>receipt&&downloadPaymentReceiptPdf({receipt,patientName:patientName(receipt.patientId),treatmentName:treatmentName(receipt.treatmentId),clinic})
 
   async function submit(e){
     e.preventDefault()
@@ -88,6 +90,7 @@ export default function Payments(){
         <div className="receipt-total-box"><div><span>Total</span><strong>{money(receipt?.accountTotal??receipt?.total??total)}</strong></div><div><span>Payé</span><strong>{money(receipt?.paid??paid)}</strong></div><div><span>Reste</span><strong>{money(receipt?.remaining??remaining)}</strong></div></div>
         <p className="receipt-note">Ce reçu confirme le paiement enregistré. Il ne remplace pas une facture fiscale.</p>
         <button type="button" className="ghost-btn full-btn no-print" onClick={()=>window.print()}><Printer size={17}/> Imprimer le ticket</button>
+        {receipt&&can('payments.receipt')&&<button type="button" className="primary-btn full-btn no-print" onClick={downloadReceipt}><FileDown size={17}/> Télécharger le reçu PDF</button>}
         {receipt && <div className="success-strip no-print">✓ Paiement enregistré · {receipt.reference}</div>}
       </aside>
     </div>
