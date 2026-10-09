@@ -40,13 +40,15 @@ export function DataProvider({ children }){
   async function updateClinic(patch){ const next = { ...clinic, ...patch }; await persistClinic(next); setClinicState(next); return next }
 
   async function update(name, id, patch){
+    let payloadForSave=patch
     if(name === 'appointments') {
       const existing = data.appointments.find(x => x.id === id)
       const candidate = { ...existing, ...patch }
       if(appointmentOverlaps(candidate, data.appointments)) throw new Error('Ce créneau est déjà occupé pour ce praticien ou cette salle.')
       if(patch.status && patch.status !== existing?.status && !(appointmentTransitions[existing?.status] || []).includes(patch.status)) throw new Error(`Transition impossible : ${existing?.status} → ${patch.status}.`)
+      payloadForSave=candidate
     }
-    const saved=await editDoc(name, id, patch)
+    const saved=await editDoc(name, id, payloadForSave)
     setData(prev => ({ ...prev, [name]: prev[name].map(r => r.id === id ? { ...r, ...patch, ...saved } : r) }))
   }
 

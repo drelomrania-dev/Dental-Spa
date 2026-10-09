@@ -4,6 +4,7 @@ import { seedData } from '../data/seed'
 import { remoteClinicId, supabase, supabaseEnabled } from './supabase'
 import { loadFinanceSnapshot, openFinanceSession, recordFinancePayment, submitFinanceSession, validateFinanceSession } from './finance'
 import { loadClinicalSnapshot } from './clinical'
+import { createAppointment, loadAppointments, updateAppointment } from './appointments'
 
 const PREFIX = 'dentalflow:'
 
@@ -35,6 +36,7 @@ export async function listDocs(name){
       const snapshot=await loadClinicalSnapshot()
       return snapshot[name]
     }
+    if(name==='appointments')return loadAppointments()
     const clinicId = await remoteClinicId()
     if(name==='patients'){
       const {data,error}=await supabase.from('patients').select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').eq('clinic_id',clinicId).order('created_at',{ascending:false})
@@ -54,6 +56,7 @@ export async function createDoc(name, data){
   if (supabaseEnabled){
     if(name==='payments') return recordFinancePayment(data)
     if(name==='collectionSessions') return openFinanceSession(data.openingCash)
+    if(name==='appointments')return createAppointment(data)
     const id = data.id || crypto.randomUUID(); const clinicId = await remoteClinicId(); const payload = { ...data, id }
     if(name==='patients'){
       const {data:row,error}=await supabase.from('patients').insert(patientToRow(payload,clinicId)).select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').single()
@@ -82,6 +85,7 @@ export async function editDoc(name, id, patch){
       if(patch.status==='Validated') return validateFinanceSession(id)
       throw new Error('Transition de session de caisse non prise en charge.')
     }
+    if(name==='appointments')return updateAppointment(id,patch)
     const clinicId = await remoteClinicId()
     if(name==='patients'){
       const {data:existing,error:readError}=await supabase.from('patients').select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').eq('clinic_id',clinicId).eq('app_id',id).single()

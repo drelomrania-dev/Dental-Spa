@@ -25,6 +25,7 @@ import RequirePermission from './components/RequirePermission'
 import Acquisition from './pages/Acquisition'
 import LeadProfile from './pages/LeadProfile'
 import PublicIntake from './pages/PublicIntake'
+import PublicManageBooking from './pages/PublicManageBooking'
 import './styles.css'
 
 function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
@@ -49,6 +50,7 @@ function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
 export default function App(){
   return <BrowserRouter><AuthProvider><Routes>
     <Route path="/book/:slug" element={supabaseEnabled?<PublicBookingRemote/>:<DataProvider><PublicBooking/></DataProvider>}/>
+    <Route path="/manage-booking/:token" element={supabaseEnabled?<PublicManageBooking/>:<main className="public-booking"><div className="public-card"><h1>Gestion en ligne indisponible</h1><p>Activez Supabase pour utiliser ce lien sécurisé.</p></div></main>}/>
     <Route path="/intake/:token" element={<PublicIntake/>}/>
     <Route path="/*" element={<AuthGate><DataProvider><InternalRoutes/></DataProvider></AuthGate>}/>
   </Routes></AuthProvider></BrowserRouter>

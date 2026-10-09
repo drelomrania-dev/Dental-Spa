@@ -5,10 +5,13 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 
 | Test | Result | Evidence |
 |---|---|---|
-| Production build | Pass | Vite transformed 1,685 modules; only the existing chunk-size warning remains |
+| Production build | Pass | Vite transformed 1,688 modules; only the existing chunk-size warning remains |
 | Public booking metadata and slots | Pass | Remote RPC returned whitelisted metadata and live 30-minute slots |
 | Booking responsive UI | Pass | 320 px, 390 px and desktop; no horizontal overflow or console errors |
 | Booking conflict protection | Pass at database command level | Advisory lock and slot recheck deployed |
+| Normalized appointment workflow | Pass | `supabase/tests/appointment_workflows.sql` verified internal creation, overlap rejection, reschedule, status transition, public management, cancellation and event history, then rolled back |
+| Booking → agenda → Acquisition | Pass | `supabase/tests/public_booking_acquisition.sql` verified agenda visibility, `Rendez-vous` Kanban placement, linked history and phone/email deduplication, then rolled back |
+| Public booking management UI | Pass | Live booking form and invalid/expired management-token state verified at 390×844 without submitting patient data |
 | Acquisition core journey | Pass | `supabase/tests/acquisition_p0.sql` completed and rolled back |
 | Invalid media token | Pass | `acquisition-media` returned HTTP 401 and created no object |
 | Acquisition mobile UI | Pass | Pipeline, profile and four intake steps checked at 390 px |
@@ -24,6 +27,7 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 ## Not yet passed
 
 - Simultaneous public booking load test with two real HTTP clients.
+- Public booking rate-limit/abuse test before large-scale promotion.
 - Browser E2E using a dedicated assistant Auth account (the current project has only the administrator account).
 - Downloadable PDF receipt rendering and legal wording review.
 - Full-day operational journey with two real staff accounts and cash-session isolation.

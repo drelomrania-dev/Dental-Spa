@@ -2,10 +2,10 @@
 
 ## Booking
 
-**Implemented:** Calendly-style public calendar, live slots, transactional conflict check, patient matching, references and responsive layouts.  
-**Verified:** Supabase RPC tests, 320/390 px and desktop UI, Vercel production.  
-**Remaining:** Public cancellation/rescheduling, configurable practitioner/room rules, rate limiting.  
-**Risks / blockers:** None for basic booking; advanced availability remains.
+**Implemented:** Calendly-style public calendar, live slots, normalized internal agenda, transactional conflict checks, patient/lead deduplication, secure management links, public rescheduling/cancellation, references and responsive layouts. Every public booking is linked to the patient agenda and to the Acquisition `Rendez-vous` stage with an auditable history.
+**Verified:** Appointment and booking-to-Acquisition SQL suites, rollback cleanup, 390 px and desktop public UI, invalid-token management UI and production build.
+**Remaining:** Configurable room/chair availability and public-endpoint rate limiting.
+**Risks / blockers:** None for the core booking-to-agenda-to-pipeline journey; advanced resource availability remains.
 
 ## Acquisition & conversion
 
@@ -18,7 +18,7 @@
 
 **Implemented:** Patients, appointments, practitioners, services, receivables, reports and settings persist through Supabase. Finance uses a normalized append-only ledger with server-calculated balances, idempotent collection, immutable receipt snapshots, linked correction entries and normalized cash sessions. Clinical visits, treatment plans and negotiated-price approvals now use normalized transactional commands; finance consumes approved prices. Legacy `app_records` operations have backend permission guards.
 **Verified:** Every route loads against the remote database without a visible data error; finance, clinical and access-control transactional SQL suites pass and roll back; anonymous users have no finance or clinical RPC access.
-**Remaining:** Normalize internal appointments; add downloadable PDF receipts; finish sensitive patient-field isolation and two-real-account browser E2E.
+**Remaining:** Add downloadable PDF receipts; finish sensitive patient-field isolation and two-real-account browser E2E.
 **Risks / blockers:** Finance integrity is enforced at the database command layer, but Moroccan invoice wording/numbering and retention still require clinic/legal validation.
 
 ## Deployment

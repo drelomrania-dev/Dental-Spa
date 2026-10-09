@@ -9,7 +9,7 @@ function leadFromRow(row){
   return {
     id:row.id,firstName:row.first_name,lastName:row.last_name||'',phone:row.phone||'',email:row.email||'',
     source:row.source,status:row.status,priority:row.priority,ownerId:row.owner_id||'',concern:row.concern||'',notes:row.notes||'',
-    lastContactAt:row.last_contact_at||'',nextFollowUpAt:row.next_follow_up_at||'',createdAt:row.created_at,updatedAt:row.updated_at
+    convertedPatientId:row.converted_patient_id||'',lastContactAt:row.last_contact_at||'',nextFollowUpAt:row.next_follow_up_at||'',createdAt:row.created_at,updatedAt:row.updated_at
   }
 }
 

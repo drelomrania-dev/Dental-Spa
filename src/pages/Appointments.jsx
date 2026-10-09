@@ -9,6 +9,7 @@ export default function Appointments(){
   const { appointments,patients,doctors,treatments,add,update,patientName,doctorName } = useData()
   const [open,setOpen]=useState(false)
   const [editingId,setEditingId]=useState(null)
+  const [error,setError]=useState('');const [saving,setSaving]=useState(false)
   const [form,setForm]=useState({patientId:'',doctorId:'',treatmentId:'',estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'})
   const grouped=useMemo(()=>Object.entries(appointments.reduce((a,x)=>{(a[x.date]??=[]).push(x);return a},{})).sort(([a],[b])=>a.localeCompare(b)),[appointments])
   const selectedPatient=patients.find(p=>p.id===form.patientId)
@@ -17,21 +18,24 @@ export default function Appointments(){
     return treatments.find(t=>t.id===appointment.treatmentId)
       || treatments.find(t=>t.name.trim().toLocaleLowerCase()===String(appointment.reason||'').trim().toLocaleLowerCase())
   }
-  function newAppointment(){setEditingId(null);setForm({patientId:'',doctorId:'',treatmentId:'',estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'});setOpen(true)}
+  function newAppointment(){setEditingId(null);setError('');setForm({patientId:'',doctorId:'',treatmentId:'',estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'});setOpen(true)}
   function editAppointment(appointment){
     const treatment=treatmentFor(appointment)
     setEditingId(appointment.id)
+    setError('')
     setForm({...appointment,treatmentId:treatment?.id||appointment.treatmentId||'',estimatedAmount:appointment.estimatedAmount??treatment?.price??''})
     setOpen(true)
   }
   async function submit(e){
     e.preventDefault()
     const payload={...form,duration:Number(form.duration),estimatedAmount:form.estimatedAmount===''?'':Number(form.estimatedAmount)}
+    setSaving(true);setError('')
     try {
       if(editingId) await update('appointments',editingId,payload)
       else await add('appointments',payload)
       setOpen(false);setEditingId(null)
-    } catch(err) { window.alert(err.message) }
+    } catch(err) { setError(err.message||'Le rendez-vous n’a pas pu être enregistré.') }
+    finally{setSaving(false)}
   }
   return <>
     <Topbar title="Rendez-vous" subtitle="Planning des patients et disponibilités des praticiens."/>
@@ -59,8 +63,9 @@ export default function Appointments(){
         <label>Montant à prévoir (DH)<input type="number" min="0" step="50" placeholder={selectedTreatment?String(selectedTreatment.price):'À préciser'} value={form.estimatedAmount} onChange={e=>setForm({...form,estimatedAmount:e.target.value})}/></label>
         <label>Durée (min)<input type="number" min="15" step="15" value={form.duration} onChange={e=>setForm({...form,duration:e.target.value})}/></label>
         <label>Motif<input required value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})}/></label>
-        <label>Statut<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>{['En attente','Confirmé','Arrivé','En attente clinique','En consultation','Terminé','Annulé','No-show'].map(s=><option key={s}>{s}</option>)}</select></label>
-        <div className="form-actions full"><button type="button" className="ghost-btn" onClick={()=>setOpen(false)}>Annuler</button><button className="primary-btn">Enregistrer</button></div>
+        <label>Statut<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>{(editingId?['En attente','Confirmé','Arrivé','En attente clinique','En consultation','Terminé','Annulé','No-show']:['En attente','Confirmé']).map(s=><option key={s}>{s}</option>)}</select></label>
+        {error&&<div className="form-error full" role="alert">{error}</div>}
+        <div className="form-actions full"><button type="button" className="ghost-btn" onClick={()=>setOpen(false)}>Annuler</button><button className="primary-btn" disabled={saving}>{saving?'Enregistrement…':'Enregistrer'}</button></div>
       </form>
     </Modal>
   </>
