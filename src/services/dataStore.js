@@ -2,6 +2,7 @@ import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase
 import { db, firebaseEnabled } from './firebase'
 import { seedData } from '../data/seed'
 import { remoteClinicId, supabase, supabaseEnabled } from './supabase'
+import { loadFinanceSnapshot, openFinanceSession, recordFinancePayment, submitFinanceSession, validateFinanceSession } from './finance'
 
 const PREFIX = 'dentalflow:'
 
@@ -25,6 +26,10 @@ function patientToRow(data,clinicId){ return {clinic_id:clinicId,app_id:data.id,
 
 export async function listDocs(name){
   if (supabaseEnabled){
+    if(name==='payments'||name==='collectionSessions'){
+      const snapshot=await loadFinanceSnapshot()
+      return name==='payments'?snapshot.payments:snapshot.sessions
+    }
     const clinicId = await remoteClinicId()
     if(name==='patients'){
       const {data,error}=await supabase.from('patients').select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').eq('clinic_id',clinicId).order('created_at',{ascending:false})
@@ -42,6 +47,8 @@ export async function listDocs(name){
 
 export async function createDoc(name, data){
   if (supabaseEnabled){
+    if(name==='payments') return recordFinancePayment(data)
+    if(name==='collectionSessions') return openFinanceSession(data.openingCash)
     const id = data.id || crypto.randomUUID(); const clinicId = await remoteClinicId(); const payload = { ...data, id }
     if(name==='patients'){
       const {data:row,error}=await supabase.from('patients').insert(patientToRow(payload,clinicId)).select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').single()
@@ -65,6 +72,11 @@ export async function createDoc(name, data){
 
 export async function editDoc(name, id, patch){
   if (supabaseEnabled){
+    if(name==='collectionSessions'){
+      if(patch.status==='Submitted') return submitFinanceSession(id,patch.countedCash)
+      if(patch.status==='Validated') return validateFinanceSession(id)
+      throw new Error('Transition de session de caisse non prise en charge.')
+    }
     const clinicId = await remoteClinicId()
     if(name==='patients'){
       const {data:existing,error:readError}=await supabase.from('patients').select('app_id,first_name,last_name,phone,email,date_of_birth,address,medical_alerts,status,created_at').eq('clinic_id',clinicId).eq('app_id',id).single()

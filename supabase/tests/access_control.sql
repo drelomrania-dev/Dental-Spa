@@ -70,12 +70,11 @@ begin
   exception when insufficient_privilege then null;
   end;
 
-  begin
-    delete from app_records
-    where clinic_id=clinic and collection='appointments' and id='qa-access-assistant';
-    raise exception 'Assistant delete unexpectedly succeeded';
-  exception when insufficient_privilege then null;
-  end;
+  delete from app_records
+  where clinic_id=clinic and collection='appointments' and id='qa-access-assistant';
+  if not exists(
+    select 1 from app_records where clinic_id=clinic and collection='appointments' and id='qa-access-assistant'
+  ) then raise exception 'Assistant delete unexpectedly succeeded'; end if;
 end
 $assistant_test$;
 

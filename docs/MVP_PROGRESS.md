@@ -16,10 +16,10 @@
 
 ## Existing clinic modules
 
-**Implemented:** Patients, appointments, practitioners, services, clinical visits/plans, negotiated-price screens, payments, receivables, collection sessions, reports and settings all persist through Supabase.  
-**Verified:** Every route loads against the remote database without a visible data error.  
-**Remaining:** Move finance/clinical modules from `app_records` to normalized transactional commands; granular backend permissions; PDF receipts; corrections/refunds; complete cash-session scope tests.  
-**Risks / blockers:** These modules are functional for controlled acceptance testing, not yet certified for unsupervised real-clinic finance.
+**Implemented:** Patients, appointments, practitioners, services, clinical visits/plans, negotiated-price screens, receivables, reports and settings persist through Supabase. Finance now uses a normalized append-only ledger with server-calculated balances, idempotent collection, immutable receipt snapshots, linked correction entries and normalized cash sessions. Legacy `app_records` operations have backend permission guards.
+**Verified:** Every route loads against the remote database without a visible data error; finance and access-control transactional SQL suites pass and roll back; anonymous users have no finance RPC access.
+**Remaining:** Normalize clinical plans/visits and internal appointments; add downloadable PDF receipts; finish practitioner assignment and sensitive clinical-field isolation.
+**Risks / blockers:** Finance integrity is enforced at the database command layer, but Moroccan invoice wording/numbering and retention still require clinic/legal validation.
 
 ## Deployment
 

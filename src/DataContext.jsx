@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { appointmentOverlaps, createDoc, editDoc, getClinic, listDocs, loadClinic, openBalances, paymentBalance, paymentIdempotencyExists, persistClinic, removeDoc } from './services/dataStore'
 import { useAuth } from './AuthContext'
 import { supabaseEnabled } from './services/supabase'
+import { correctFinancePayment, getFinanceBalance } from './services/finance'
 
 const DataContext = createContext(null)
 const collections = ['patients','treatments','doctors','appointments','payments','visits','treatmentPlans','priceRequests','collectionSessions','auditEvents','bookingLinks','staff','roles']
@@ -44,8 +45,24 @@ export function DataProvider({ children }){
       if(appointmentOverlaps(candidate, data.appointments)) throw new Error('Ce créneau est déjà occupé pour ce praticien ou cette salle.')
       if(patch.status && patch.status !== existing?.status && !(appointmentTransitions[existing?.status] || []).includes(patch.status)) throw new Error(`Transition impossible : ${existing?.status} → ${patch.status}.`)
     }
-    await editDoc(name, id, patch)
-    setData(prev => ({ ...prev, [name]: prev[name].map(r => r.id === id ? { ...r, ...patch } : r) }))
+    const saved=await editDoc(name, id, patch)
+    setData(prev => ({ ...prev, [name]: prev[name].map(r => r.id === id ? { ...r, ...patch, ...saved } : r) }))
+  }
+
+  const financeBalance=useCallback(async(patientId,treatmentId)=>{
+    if(supabaseEnabled)return getFinanceBalance(patientId,treatmentId)
+    return paymentBalance(data.payments,patientId,treatmentId)
+  },[data.payments])
+
+  async function correctPayment(paymentId,amount,reason){
+    if(supabaseEnabled){
+      const row=await correctFinancePayment(paymentId,amount,reason)
+      setData(prev=>({...prev,payments:[row,...prev.payments]}))
+      return row
+    }
+    const original=data.payments.find(row=>row.id===paymentId)
+    if(!original)throw new Error('Paiement introuvable.')
+    return add('payments',{patientId:original.patientId,treatmentId:original.treatmentId,doctorId:original.doctorId,date:new Date().toISOString().slice(0,10),total:0,paid:-Number(amount),remaining:0,plan:original.plan,method:original.method,status:'Correction',reference:`AVOIR-${String(Date.now()).slice(-6)}`,idempotencyKey:`correction:${paymentId}:${crypto.randomUUID()}`,collectorUserId:currentUserId,sessionId:original.sessionId||'',kind:'refund',reason})
   }
 
   async function remove(name, id){
@@ -73,7 +90,7 @@ export function DataProvider({ children }){
   }), [data, currentUserId, access])
 
   function switchUser(id){ localStorage.setItem('dentalflow:currentUser', id); setCurrentUserId(id) }
-  return <DataContext.Provider value={{ ...data, clinic, loading, dataError, add, update, remove, updateClinic, switchUser, ...helpers }}>{children}</DataContext.Provider>
+  return <DataContext.Provider value={{ ...data, clinic, loading, dataError, add, update, remove, updateClinic, switchUser, financeBalance, correctPayment, ...helpers }}>{children}</DataContext.Provider>
 }
 
 export function useData(){
