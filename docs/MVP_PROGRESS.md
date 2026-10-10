@@ -22,6 +22,12 @@
 **Remaining:** Finish two-real-account browser E2E and obtain clinic/legal validation of receipt wording.
 **Risks / blockers:** Finance integrity is enforced at the database command layer, but Moroccan invoice wording/numbering and retention still require clinic/legal validation.
 
+## Financial reporting
+
+**Implemented:** Date presets and custom ranges, gross collections, corrections, net collections, average payment, current receivables, breakdowns by service/payment method/day/collector, cash-session reconciliation and semicolon-delimited UTF-8 CSV export. Aggregate viewing and detailed export use separate server permissions; every detailed export is written to the audit log. Labels explicitly avoid presenting collections as accounting revenue or profit.
+**Verified:** `supabase/tests/financial_reporting.sql` covers aggregate totals, detailed rows, export audit and unauthorized-role denial with complete rollback. The production build passes.
+**Remaining:** Clinic-specific accounting exports and legally reviewed invoice reporting remain outside the operational collection report.
+
 ## Deployment
 
 **Implemented:** GitHub `main` auto-deploy, mobile shell, production Supabase default using a browser-safe publishable key.  

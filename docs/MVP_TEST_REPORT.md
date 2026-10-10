@@ -23,6 +23,7 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 | Legacy-record backend permissions | Pass | `supabase/tests/access_control.sql` verified administrator and assistant behavior, then rolled back |
 | Server-authoritative finance ledger | Pass | `supabase/tests/finance_ledger.sql` verified idempotency, overpayment rejection, linked correction, immutable access boundary and cash reconciliation, then rolled back |
 | Finance API exposure | Pass | Four RPC-only RLS policies; zero anonymous finance grants; no finance QA rows remained |
+| Financial reporting and export | Pass | `supabase/tests/financial_reporting.sql` verified date-scoped aggregates, method/service/collector groupings, detailed CSV source rows, audit logging and denial without `reports.finance` / `reports.export`, then rolled back |
 | Finance browser UI | Pass | Remote history, correction modal and authoritative balance verified; 390×844 payment form has no horizontal overflow and a 45 px primary action |
 | Clinical workflow transaction | Pass | Temporary assistant request → administrator approval → plan repricing → finance price resolution, all rolled back |
 | Clinical browser UI | Pass | Remote clinical and negotiated-price pages plus both creation modals load without writing patient data |

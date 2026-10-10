@@ -1,0 +1,6 @@
+import { supabase, supabaseEnabled } from './supabase'
+
+function unwrap(result){if(result.error)throw result.error;return result.data}
+export async function loadFinancialReport(from,to){if(!supabaseEnabled)throw new Error('Les rapports Supabase ne sont pas activés.');return unwrap(await supabase.rpc('finance_report_snapshot',{p_from:from,p_to:to}))}
+export async function loadFinancialExport(from,to){if(!supabaseEnabled)throw new Error('Les exports Supabase ne sont pas activés.');const data=unwrap(await supabase.rpc('finance_report_export',{p_from:from,p_to:to}));return Array.isArray(data)?data:[]}
+export function downloadFinancialCsv(rows,from,to){const columns=[['Référence','reference'],['Date','date'],['Patient','patient'],['Soin','treatment'],['Type','type'],['Montant MAD','amount'],['Moyen','method'],['Collecteur','collector'],['Session','sessionId'],['Motif','reason']];const escape=value=>`"${String(value??'').replaceAll('"','""')}"`;const csv='\ufeff'+[columns.map(([label])=>escape(label)).join(';'),...rows.map(row=>columns.map(([,key])=>escape(row[key])).join(';'))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=`encaissements-${from}-${to}.csv`;link.click();URL.revokeObjectURL(url)}

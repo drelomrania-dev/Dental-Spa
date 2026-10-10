@@ -41,7 +41,7 @@ function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
     <Route path="/appointments" element={<Appointments/>}/>
     <Route path="/doctors" element={<Doctors/>}/>
     <Route path="/treatments" element={<Treatments/>}/>
-    <Route path="/reports" element={<RequirePermission roles={['administrator']}><Reports/></RequirePermission>}/>
+    <Route path="/reports" element={<RequirePermission permission="reports.finance" roles={['administrator']}><Reports/></RequirePermission>}/>
     <Route path="/settings" element={<RequirePermission roles={['administrator']}><Settings/></RequirePermission>}/>
     <Route path="/clinical" element={<RequirePermission permission="clinical.view" roles={['administrator']}><Clinical/></RequirePermission>}/>
     <Route path="/approvals" element={<RequirePermission permission="priceRequests.create" roles={['administrator']}><Approvals/></RequirePermission>}/>

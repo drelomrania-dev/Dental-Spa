@@ -16,7 +16,7 @@
 | 2 | Internal calendar and public booking | Complete | Normalized agenda, configurable chair/room availability, contact throttling, secure public management and Acquisition linkage pass transactional suites |
 | 3 | Visits, treatment plans, quotations | Complete | Transactional visit → plan → negotiated approval → finance-price suite passes |
 | 4 | Approvals, payments, balances, receipts, corrections | Complete for MVP | Transactional ledger, balances, receipt snapshots, linked corrections and downloadable PDF pass; legal wording remains external validation |
-| 5 | Collection sessions and role dashboards | In progress | Normalized session open/submit/validate and cash reconciliation pass; two-account browser E2E remains |
+| 5 | Collection sessions and role dashboards | Complete for administrator | Normalized session open/submit/validate, cash reconciliation, filtered financial reporting and audited export pass; two-account assistant E2E remains |
 | 6 | End-to-end, security, recovery and acceptance | In progress | Mandatory journey and permission suite passes |
 | P0 Acquisition | Leads, intake, guided media, quotes, conversion | Complete | Transactional SQL test and mobile UI checks pass |
 

@@ -12,7 +12,7 @@ Interface française, mobile-first, pour les flux quotidiens d’un cabinet dent
 - Rendez-vous / bookings
 - Praticiens
 - Soins & tarifs
-- Rapports simples
+- Rapports financiers filtrables, rapprochements et export CSV audité
 - Paramètres et configuration clinique
 - Réservation publique progressive `/book/consultation` avec choix du soin, motif, créneau et coordonnées
 - Modèle de visites cliniques, plans de traitement, demandes de prix négociés et sessions de caisse

@@ -28,7 +28,8 @@ export default function Sidebar({open=false,onClose=()=>{},onNavigate=()=>{}}){
   const visible = new Set(nav.filter(([to]) => {
     if(['/clinical'].includes(to)) return can('clinical.view')
     if(['/approvals'].includes(to)) return can('priceRequests.create') || currentUser?.role === 'administrator'
-    if(['/reports','/receivables','/payment-history'].includes(to)) return currentUser?.role === 'administrator'
+    if(to==='/reports') return can('reports.finance') || currentUser?.role === 'administrator'
+    if(['/receivables','/payment-history'].includes(to)) return currentUser?.role === 'administrator'
     return true
   }).map(([to])=>to))
   return (
