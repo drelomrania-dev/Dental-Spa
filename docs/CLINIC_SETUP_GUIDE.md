@@ -18,5 +18,5 @@
 ## Important limitations
 
 - Do not treat a payment receipt as a legally validated Moroccan invoice template.
-- Do not rely on email invitations until SMTP delivery is tested.
+- Use the administrator-generated secure staff link for onboarding until SMTP delivery is tested; transmit it only to the intended staff member.
 - Keep real clinical/financial use paused until the remaining permission and ledger acceptance tests in `MVP_TEST_REPORT.md` pass.

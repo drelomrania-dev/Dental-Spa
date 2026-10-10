@@ -5,7 +5,7 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 
 | Test | Result | Evidence |
 |---|---|---|
-| Production build | Pass | Vite transformed 1,691 modules; only the existing chunk-size warning remains |
+| Production build | Pass | Vite transformed 1,693 modules; only the existing chunk-size warning remains |
 | Public booking metadata and slots | Pass | Remote RPC returned whitelisted metadata and live 30-minute slots |
 | Booking responsive UI | Pass | 320 px, 390 px and desktop; no horizontal overflow or console errors |
 | Booking conflict protection | Pass at database command level | Advisory lock and slot recheck deployed |
@@ -27,12 +27,16 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 | Patient privacy boundary | Pass | `supabase/tests/patient_access.sql` verified basic reception access, medical-data denial, direct-table denial and administrator medical access, then rolled back |
 | Patient regression suite | Pass | Acquisition, finance, clinical, appointment and booking bridge suites all pass after the patient RPC migration; zero QA patients, medical records or Auth users remain |
 | Downloadable payment receipt | Pass | Browser-native PDF generator produced a valid one-page A4 receipt; Poppler rendering showed no clipping/overlap and pypdf verified French accents and payment fields |
+| Staff invitation boundary | Pass | `supabase/tests/staff_invitations.sql` verified assistant and practitioner claims, practitioner-directory linkage, idempotence, RPC-only storage and rollback cleanup |
+| Staff access-link function | Pass | `staff-invite-link` is active with JWT verification and returned HTTP 401 to an anonymous request |
+| Auth bootstrap hardening | Pass | Public bootstrap reports closed after the first administrator; the production-mode login screen no longer exposes free administrator registration |
+| Staff invitation mobile UI | Pass | Invalid/expired link state rendered at 390×844 without overflow |
 
 ## Not yet passed
 
 - Simultaneous public booking load test with two real HTTP clients.
 - Optional IP-level edge/WAF throttling test for repeated invalid requests.
-- Browser E2E using a dedicated assistant Auth account (the current project has only the administrator account).
+- Browser E2E using a dedicated invited assistant Auth account (the current project still has only the administrator account).
 - Clinic/legal review of Moroccan receipt wording, numbering and retention.
 - Full-day operational journey with two real staff accounts and cash-session isolation.
 

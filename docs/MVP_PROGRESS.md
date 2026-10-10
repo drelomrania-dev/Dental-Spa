@@ -18,6 +18,7 @@
 
 **Implemented:** Patients, appointments, practitioners, services, receivables, reports and settings persist through Supabase. Patient identity and medical records now have separate RPC-only access boundaries, with assignment-scoped clinical access and no direct browser table grants. Finance uses a normalized append-only ledger with server-calculated balances, idempotent collection, immutable receipt snapshots, linked correction entries and normalized cash sessions. Clinical visits, treatment plans and negotiated-price approvals use normalized transactional commands; finance consumes approved prices. Legacy `app_records` operations have backend permission guards.
 **Verified:** Patient privacy plus all prior access-control, acquisition, finance, clinical and appointment transactional suites pass and roll back; zero QA rows remain. Anonymous users have no patient, finance or clinical table access.
+**Implemented:** Administrators can generate a one-time staff access link without outbound email. The invited Auth identity is bound transactionally to the clinic and selected assistant/practitioner role; practitioners are linked to the clinical directory. Free administrator registration closes automatically after the first bootstrap.
 **Remaining:** Finish two-real-account browser E2E and obtain clinic/legal validation of receipt wording.
 **Risks / blockers:** Finance integrity is enforced at the database command layer, but Moroccan invoice wording/numbering and retention still require clinic/legal validation.
 
@@ -25,5 +26,5 @@
 
 **Implemented:** GitHub `main` auto-deploy, mobile shell, production Supabase default using a browser-safe publishable key.  
 **Verified:** Production root requires Supabase authentication and `/book/consultation` loads live remote availability.  
-**Remaining:** Configure custom domain, production SMTP, backups and monitoring.  
+**Remaining:** Configure custom domain, production SMTP for optional automated messages, backups and monitoring.
 **Risks / blockers:** Supabase leaked-password protection is not enabled yet.

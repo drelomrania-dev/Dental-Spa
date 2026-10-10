@@ -90,7 +90,7 @@ src/
 
 ## Prochaines évolutions recommandées
 
-- Gestion complète des utilisateurs et invitations par rôle
+- Vérification navigateur à deux comptes réels du flux d’invitation par rôle
 - Échéancier détaillé pour chaque plan de paiement
 - Rappels automatiques des échéances
 - Vue calendrier semaine/mois avec disponibilités praticiens
