@@ -14,7 +14,7 @@ Interface française, mobile-first, pour les flux quotidiens d’un cabinet dent
 - Soins & tarifs
 - Rapports simples
 - Paramètres et configuration clinique
-- Réservation publique `/book/consultation`
+- Réservation publique progressive `/book/consultation` avec choix du soin, motif, créneau et coordonnées
 - Modèle de visites cliniques, plans de traitement, demandes de prix négociés et sessions de caisse
 
 Le dépôt contient les fondations intégrées du MVP. Avant de charger de vraies données patients, validez les exigences réglementaires, la conservation des données et les sauvegardes applicables à votre cabinet.

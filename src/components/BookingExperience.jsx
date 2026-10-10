@@ -1,120 +1,51 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, CalendarDays, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock3, MapPin, ShieldCheck, Sparkles, Stethoscope, UserRound } from 'lucide-react'
-import { todayISO } from '../utils'
+import { money, todayISO } from '../utils'
 
-const WEEKDAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']
+const WEEKDAYS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']
+const STEPS=['service','reason','date','time','identity','contact','review']
+const REASONS=['Contrôle ou consultation','Douleur ou gêne','Esthétique du sourire','Suivi d’un traitement']
 
-function isoDate(date){
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
-}
-
-function dateFromISO(value){
-  const [year,month,day]=String(value).split('-').map(Number)
-  return new Date(year,month-1,day,12)
-}
-
-function displayDate(value){
-  return dateFromISO(value).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
-}
-
-function monthDays(month){
-  const first=new Date(month.getFullYear(),month.getMonth(),1,12)
-  const offset=(first.getDay()+6)%7
-  return Array.from({length:42},(_,index)=>{
-    const date=new Date(first)
-    date.setDate(index-offset+1)
-    return date
-  })
-}
+function isoDate(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
+function dateFromISO(value){const [year,month,day]=String(value).split('-').map(Number);return new Date(year,month-1,day,12)}
+function displayDate(value){return dateFromISO(value).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+function monthDays(month){const first=new Date(month.getFullYear(),month.getMonth(),1,12);const offset=(first.getDay()+6)%7;return Array.from({length:42},(_,index)=>{const date=new Date(first);date.setDate(index-offset+1);return date})}
 
 export default function BookingExperience({config,getSlots,onBook}){
-  const today=todayISO()
+  const today=todayISO();const services=Array.isArray(config.services)?config.services:[]
+  const initialService=services.find(item=>item.id===config.defaultServiceId)?.id||services[0]?.id||''
+  const [step,setStep]=useState('service');const [selectedServiceId,setSelectedServiceId]=useState(initialService);const [reason,setReason]=useState('')
   const [month,setMonth]=useState(()=>{const date=dateFromISO(today);return new Date(date.getFullYear(),date.getMonth(),1,12)})
-  const [step,setStep]=useState('schedule')
-  const [selectedDate,setSelectedDate]=useState(today)
-  const [selectedTime,setSelectedTime]=useState('')
-  const [slots,setSlots]=useState([])
-  const [loadingSlots,setLoadingSlots]=useState(true)
-  const [submitting,setSubmitting]=useState(false)
-  const [error,setError]=useState('')
-  const [done,setDone]=useState(null)
-  const [contact,setContact]=useState({firstName:'',lastName:'',phone:'',email:''})
-  const days=useMemo(()=>monthDays(month),[month])
+  const [selectedDate,setSelectedDate]=useState(today);const [selectedTime,setSelectedTime]=useState('');const [slots,setSlots]=useState([]);const [loadingSlots,setLoadingSlots]=useState(false)
+  const [submitting,setSubmitting]=useState(false);const [error,setError]=useState('');const [done,setDone]=useState(null);const [contact,setContact]=useState({firstName:'',lastName:'',phone:'',email:''})
+  const selectedService=services.find(item=>item.id===selectedServiceId);const stepIndex=STEPS.indexOf(step);const days=useMemo(()=>monthDays(month),[month])
   const maxDate=useMemo(()=>{const date=dateFromISO(today);date.setDate(date.getDate()+Number(config.maximumAdvanceDays||90));return isoDate(date)},[today,config.maximumAdvanceDays])
 
-  useEffect(()=>{
-    let live=true
-    setLoadingSlots(true);setError('');setSelectedTime('')
-    getSlots(selectedDate).then(next=>{if(live)setSlots(next||[])}).catch(()=>{if(live){setSlots([]);setError('Impossible de charger les disponibilités. Réessayez.')}}).finally(()=>{if(live)setLoadingSlots(false)})
-    return()=>{live=false}
-  },[selectedDate,getSlots])
+  useEffect(()=>{if(step!=='time'||!selectedServiceId)return;let live=true;setLoadingSlots(true);setError('');setSelectedTime('');getSlots(selectedDate,selectedServiceId).then(next=>{if(live)setSlots(next||[])}).catch(()=>{if(live){setSlots([]);setError('Impossible de charger les disponibilités. Réessayez.')}}).finally(()=>{if(live)setLoadingSlots(false)});return()=>{live=false}},[step,selectedDate,selectedServiceId,getSlots])
 
-  function chooseDate(date){
-    const value=isoDate(date)
-    if(value<today||value>maxDate||date.getDay()===0)return
-    setSelectedDate(value)
-  }
+  function go(next){setError('');setStep(next);window.scrollTo?.({top:0,behavior:'smooth'})}
+  function back(){if(stepIndex>0)go(STEPS[stepIndex-1])}
+  function selectService(id){setSelectedServiceId(id);setSelectedTime('');go('reason')}
+  function chooseDate(date){const value=isoDate(date);if(value<today||value>maxDate||date.getDay()===0)return;setSelectedDate(value);go('time')}
+  function previousMonth(){const current=dateFromISO(today);if(month.getFullYear()===current.getFullYear()&&month.getMonth()===current.getMonth())return;setMonth(new Date(month.getFullYear(),month.getMonth()-1,1,12))}
+  function continueReason(){if(reason.trim().length<3){setError('Expliquez brièvement la raison de votre visite.');return}go('date')}
+  function continueIdentity(){if(!contact.firstName.trim()||!contact.lastName.trim()){setError('Indiquez votre prénom et votre nom.');return}go('contact')}
+  function continueContact(){if(contact.phone.replace(/[^0-9]/g,'').length<6){setError('Indiquez un numéro de téléphone valide.');return}go('review')}
+  async function submit(){setError('');setSubmitting(true);try{const booking=await onBook({...contact,serviceId:selectedServiceId,reason:reason.trim(),date:selectedDate,time:selectedTime});setDone(booking)}catch(err){const message=String(err?.message||'').toLowerCase();const unavailable=message.includes('slot');const rateLimited=message.includes('rate limit');setError(rateLimited?'Trop de réservations ont été envoyées avec ces coordonnées. Réessayez dans 30 minutes.':unavailable?'Ce créneau vient d’être réservé. Choisissez une autre heure.':'Impossible d’enregistrer le rendez-vous. Vérifiez vos informations puis réessayez.');if(unavailable){go('time');const refreshed=await getSlots(selectedDate,selectedServiceId).catch(()=>[]);setSlots(refreshed);setSelectedTime('')}}finally{setSubmitting(false)}}
 
-  function previousMonth(){
-    const current=dateFromISO(today)
-    if(month.getFullYear()===current.getFullYear()&&month.getMonth()===current.getMonth())return
-    setMonth(new Date(month.getFullYear(),month.getMonth()-1,1,12))
-  }
-
-  async function submit(e){
-    e.preventDefault();setError('');setSubmitting(true)
-    try {
-      const booking=await onBook({...contact,date:selectedDate,time:selectedTime})
-      setDone(booking)
-    } catch(err){
-      const message=String(err?.message||'').toLowerCase()
-      const unavailable=message.includes('slot')
-      const rateLimited=message.includes('rate limit')
-      setError(rateLimited?'Trop de réservations ont été envoyées avec ces coordonnées. Réessayez dans 30 minutes.':unavailable?'Ce créneau vient d’être réservé. Choisissez une autre heure.':'Impossible d’enregistrer le rendez-vous. Vérifiez vos informations puis réessayez.')
-      if(unavailable){setStep('schedule');const refreshed=await getSlots(selectedDate).catch(()=>[]);setSlots(refreshed);setSelectedTime('')}
-    } finally { setSubmitting(false) }
-  }
-
-  if(done)return <main className="booking-page"><section className="booking-success-card"><div className="booking-success-icon"><CheckCircle2 size={38}/></div><span className="booking-eyebrow">Réservation confirmée</span><h1>Votre rendez-vous est enregistré</h1><p>Un membre de l’équipe pourra vous contacter si une précision est nécessaire.</p><div className="booking-confirmation"><div><CalendarDays size={18}/><span><strong>{displayDate(done.date||selectedDate)}</strong>{done.time||selectedTime}</span></div><div><Stethoscope size={18}/><span><strong>{config.title}</strong>{config.doctorName||'Équipe Dental Spa'}</span></div><div className="booking-reference"><span>Référence</span><strong>{done.reference}</strong></div></div>{done.manageToken?<><a className="primary-btn large" href={`/manage-booking/${encodeURIComponent(done.manageToken)}`}>Gérer mon rendez-vous</a><a className="ghost-btn full-btn" href={`/book/${config.slug}`}>Nouvelle réservation</a></>:<a className="primary-btn large" href={`/book/${config.slug}`}>Nouvelle réservation</a>}</section></main>
+  if(done)return <main className="booking-page"><section className="booking-success-card"><div className="booking-success-icon"><CheckCircle2 size={38}/></div><span className="booking-eyebrow">Réservation confirmée</span><h1>Votre rendez-vous est enregistré</h1><p>Un membre de l’équipe pourra vous contacter si une précision est nécessaire.</p><div className="booking-confirmation"><div><CalendarDays size={18}/><span><strong>{displayDate(done.date||selectedDate)}</strong>{done.time||selectedTime}</span></div><div><Stethoscope size={18}/><span><strong>{done.serviceName||selectedService?.name||config.title}</strong>{config.doctorName||'Équipe Dental Spa'}</span></div><div className="booking-confirmation-reason"><span>Motif de la visite</span><strong>{reason}</strong></div><div className="booking-reference"><span>Référence</span><strong>{done.reference}</strong></div></div>{done.manageToken?<><a className="primary-btn large" href={`/manage-booking/${encodeURIComponent(done.manageToken)}`}>Gérer mon rendez-vous</a><a className="ghost-btn full-btn" href={`/book/${config.slug}`}>Nouvelle réservation</a></>:<a className="primary-btn large" href={`/book/${config.slug}`}>Nouvelle réservation</a>}</section></main>
 
   return <main className="booking-page"><section className="booking-shell">
-    <aside className="booking-event-panel">
-      <div className="public-brand"><Sparkles size={20}/><span>{config.clinicName||'Dental Spa'}</span></div>
-      <span className="booking-eyebrow">Réservation en ligne</span>
-      <h1>{config.title}</h1>
-      <p>{config.description}</p>
-      <div className="booking-event-meta">
-        <div><Clock3 size={17}/><span><strong>{config.duration||30} minutes</strong>Durée du rendez-vous</span></div>
-        <div><UserRound size={17}/><span><strong>{config.doctorName||'Équipe Dental Spa'}</strong>Praticien</span></div>
-        {config.address&&<div><MapPin size={17}/><span><strong>Au cabinet</strong>{config.address}</span></div>}
-      </div>
-      {(selectedDate&&selectedTime)&&<div className="booking-selection"><Check size={17}/><span>{displayDate(selectedDate)} à {selectedTime}</span></div>}
-      <div className="booking-trust"><ShieldCheck size={16}/><span>Vos coordonnées sont transmises de manière sécurisée au cabinet.</span></div>
-    </aside>
-
-    <div className="booking-flow-panel">
-      <div className="booking-progress" aria-label="Progression"><span className={step==='schedule'?'active':'done'}>1</span><i/><span className={step==='details'?'active':''}>2</span></div>
-      {step==='schedule'?<>
-        <div className="booking-step-head"><div><span className="booking-eyebrow">Étape 1 sur 2</span><h2>Choisissez une date et une heure</h2></div></div>
-        <div className="calendar-layout">
-          <div className="booking-calendar">
-            <div className="calendar-head"><button type="button" aria-label="Mois précédent" onClick={previousMonth}><ChevronLeft size={18}/></button><strong>{month.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong><button type="button" aria-label="Mois suivant" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1,12))}><ChevronRight size={18}/></button></div>
-            <div className="calendar-weekdays">{WEEKDAYS.map(day=><span key={day}>{day}</span>)}</div>
-            <div className="calendar-grid">{days.map(date=>{const value=isoDate(date);const outside=date.getMonth()!==month.getMonth();const disabled=value<today||value>maxDate||date.getDay()===0;return <button type="button" key={value} disabled={disabled} className={`${outside?'outside ':''}${selectedDate===value?'selected':''}`} aria-label={displayDate(value)} onClick={()=>chooseDate(date)}>{date.getDate()}</button>})}</div>
-          </div>
-          <div className="booking-times"><strong>{dateFromISO(selectedDate).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</strong>{loadingSlots?<div className="slot-loading">Recherche des créneaux…</div>:slots.length?<div className="time-list">{slots.map(slot=><button type="button" key={slot} className={selectedTime===slot?'selected':''} onClick={()=>setSelectedTime(slot)}>{slot}{selectedTime===slot&&<Check size={15}/>}</button>)}</div>:<div className="slot-empty"><CalendarDays size={24}/><span>Aucun créneau ce jour-là.</span><small>Choisissez une autre date.</small></div>}</div>
-        </div>
-        {error&&<div className="form-error">{error}</div>}
-        <button type="button" className="primary-btn large booking-continue" disabled={!selectedTime} onClick={()=>setStep('details')}>Continuer</button>
-      </>:<>
-        <div className="booking-step-head"><button type="button" className="booking-back" aria-label="Revenir au calendrier" onClick={()=>setStep('schedule')}><ArrowLeft size={18}/></button><div><span className="booking-eyebrow">Étape 2 sur 2</span><h2>Vos coordonnées</h2></div></div>
-        <div className="booking-mobile-summary"><CalendarDays size={17}/><span>{displayDate(selectedDate)} · {selectedTime}</span></div>
-        <form className="booking-details-form" onSubmit={submit}>
-          <div className="form-grid"><label>Prénom<input autoComplete="given-name" required value={contact.firstName} onChange={e=>setContact({...contact,firstName:e.target.value})}/></label><label>Nom<input autoComplete="family-name" required value={contact.lastName} onChange={e=>setContact({...contact,lastName:e.target.value})}/></label><label>Téléphone<input type="tel" autoComplete="tel" required minLength="6" value={contact.phone} onChange={e=>setContact({...contact,phone:e.target.value})}/></label><label>Email <small>(facultatif)</small><input type="email" autoComplete="email" value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})}/></label></div>
-          {error&&<div className="form-error">{error}</div>}
-          <button className="primary-btn large" disabled={submitting}>{submitting?'Réservation en cours…':'Confirmer le rendez-vous'}</button>
-        </form>
-      </>}
+    <aside className="booking-event-panel"><div className="public-brand"><Sparkles size={20}/><span>{config.clinicName||'Dental Spa'}</span></div><span className="booking-eyebrow">Réservation en ligne</span><h1>{config.title}</h1><p>{config.description}</p><div className="booking-event-meta"><div><Clock3 size={17}/><span><strong>{selectedService?.duration||config.duration||30} minutes</strong>{selectedService?.name||'Durée du rendez-vous'}</span></div><div><UserRound size={17}/><span><strong>{config.doctorName||'Équipe Dental Spa'}</strong>Praticien</span></div>{config.address&&<div><MapPin size={17}/><span><strong>Au cabinet</strong>{config.address}</span></div>}</div>{selectedDate&&selectedTime&&<div className="booking-selection"><Check size={17}/><span>{displayDate(selectedDate)} à {selectedTime}</span></div>}<div className="booking-trust"><ShieldCheck size={16}/><span>Vos coordonnées sont transmises de manière sécurisée au cabinet.</span></div></aside>
+    <div className="booking-flow-panel"><div className="booking-progress booking-progress-steps" aria-label={`Étape ${stepIndex+1} sur ${STEPS.length}`}><div><span style={{width:`${((stepIndex+1)/STEPS.length)*100}%`}}/></div><strong>{stepIndex+1} / {STEPS.length}</strong></div>
+      <div className="booking-step-head">{stepIndex>0&&<button type="button" className="booking-back" aria-label="Étape précédente" onClick={back}><ArrowLeft size={18}/></button>}<div><span className="booking-eyebrow">Étape {stepIndex+1} sur {STEPS.length}</span><h2>{step==='service'?'Quel soin souhaitez-vous ?':step==='reason'?'Pourquoi réservez-vous cette visite ?':step==='date'?'Choisissez une date':step==='time'?'Choisissez une heure':step==='identity'?'Comment vous appelez-vous ?':step==='contact'?'Comment pouvons-nous vous joindre ?':'Vérifiez votre rendez-vous'}</h2></div></div>
+      {step==='service'&&<div className="booking-service-list">{services.map(service=><button type="button" key={service.id} className={selectedServiceId===service.id?'selected':''} onClick={()=>selectService(service.id)}><span><strong>{service.name}</strong>{service.description&&<small>{service.description}</small>}<em>{service.category||'Soin dentaire'} · {service.duration} min</em></span><b>{money(service.price)}</b><ChevronRight size={18}/></button>)}{!services.length&&<div className="slot-empty"><Stethoscope size={24}/><span>Aucun service réservable.</span><small>Contactez le cabinet pour prendre rendez-vous.</small></div>}</div>}
+      {step==='reason'&&<div className="booking-question"><p>Quelques mots suffisent. Cette information aide l’équipe à préparer votre accueil.</p><div className="reason-chips">{REASONS.map(item=><button type="button" key={item} className={reason===item?'selected':''} onClick={()=>setReason(item)}>{item}</button>)}</div><label>Votre motif<textarea autoFocus rows="5" maxLength="500" value={reason} onChange={event=>setReason(event.target.value)} placeholder="Ex. douleur depuis deux jours, contrôle annuel, projet de facettes…"/></label><small>{reason.length} / 500</small>{error&&<div className="form-error" role="alert">{error}</div>}<button type="button" className="primary-btn large booking-continue" onClick={continueReason}>Continuer</button></div>}
+      {step==='date'&&<div className="booking-calendar"><div className="calendar-head"><button type="button" aria-label="Mois précédent" onClick={previousMonth}><ChevronLeft size={18}/></button><strong>{month.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong><button type="button" aria-label="Mois suivant" onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()+1,1,12))}><ChevronRight size={18}/></button></div><div className="calendar-weekdays">{WEEKDAYS.map(day=><span key={day}>{day}</span>)}</div><div className="calendar-grid">{days.map(date=>{const value=isoDate(date);const outside=date.getMonth()!==month.getMonth();const disabled=value<today||value>maxDate||date.getDay()===0;return <button type="button" key={value} disabled={disabled} className={`${outside?'outside ':''}${selectedDate===value?'selected':''}`} aria-label={displayDate(value)} onClick={()=>chooseDate(date)}>{date.getDate()}</button>})}</div></div>}
+      {step==='time'&&<div className="booking-time-step"><div className="booking-mobile-summary"><CalendarDays size={17}/><span>{displayDate(selectedDate)} · {selectedService?.name}</span></div>{loadingSlots?<div className="slot-loading">Recherche des créneaux…</div>:slots.length?<div className="time-list">{slots.map(slot=><button type="button" key={slot} onClick={()=>{setSelectedTime(slot);go('identity')}}>{slot}<ChevronRight size={15}/></button>)}</div>:<div className="slot-empty"><CalendarDays size={24}/><span>Aucun créneau ce jour-là.</span><small>Revenez à l’étape précédente pour choisir une autre date.</small></div>}{error&&<div className="form-error" role="alert">{error}</div>}</div>}
+      {step==='identity'&&<div className="booking-question"><div className="booking-single-fields"><label>Prénom<input autoFocus autoComplete="given-name" value={contact.firstName} onChange={event=>setContact({...contact,firstName:event.target.value})}/></label><label>Nom<input autoComplete="family-name" value={contact.lastName} onChange={event=>setContact({...contact,lastName:event.target.value})}/></label></div>{error&&<div className="form-error" role="alert">{error}</div>}<button type="button" className="primary-btn large booking-continue" onClick={continueIdentity}>Continuer</button></div>}
+      {step==='contact'&&<div className="booking-question"><div className="booking-single-fields"><label>Téléphone<input autoFocus type="tel" inputMode="tel" autoComplete="tel" value={contact.phone} onChange={event=>setContact({...contact,phone:event.target.value})} placeholder="+212 6…"/></label><label>Email <small>(facultatif)</small><input type="email" autoComplete="email" value={contact.email} onChange={event=>setContact({...contact,email:event.target.value})}/></label></div>{error&&<div className="form-error" role="alert">{error}</div>}<button type="button" className="primary-btn large booking-continue" onClick={continueContact}>Continuer</button></div>}
+      {step==='review'&&<div className="booking-review"><div><span>Soin</span><strong>{selectedService?.name}</strong><button type="button" onClick={()=>go('service')}>Modifier</button></div><div><span>Motif</span><strong>{reason}</strong><button type="button" onClick={()=>go('reason')}>Modifier</button></div><div><span>Date et heure</span><strong>{displayDate(selectedDate)} · {selectedTime}</strong><button type="button" onClick={()=>go('date')}>Modifier</button></div><div><span>Patient</span><strong>{contact.firstName} {contact.lastName} · {contact.phone}</strong><button type="button" onClick={()=>go('identity')}>Modifier</button></div>{error&&<div className="form-error" role="alert">{error}</div>}<button type="button" className="primary-btn large booking-continue" disabled={submitting} onClick={submit}>{submitting?'Réservation en cours…':'Confirmer le rendez-vous'}</button><p className="booking-privacy"><ShieldCheck size={15}/> En confirmant, vos informations sont transmises uniquement au cabinet pour gérer ce rendez-vous.</p></div>}
     </div>
   </section><small className="booking-footer">Propulsé par DentalFlow · Fuseau horaire {config.timezone||'Africa/Casablanca'}</small></main>
 }

@@ -12,6 +12,8 @@ Environment: local Vite against production Supabase; Vercel production smoke tes
 | Chair/room availability and abuse limit | Pass | `supabase/tests/booking_resources_rate_limits.sql` verified cross-practitioner resource collision rejection, separate-resource concurrency, public resource assignment and rejection of the fourth booking by the same normalized contact, then rolled back |
 | Normalized appointment workflow | Pass | `supabase/tests/appointment_workflows.sql` verified internal creation, overlap rejection, reschedule, status transition, public management, cancellation and event history, then rolled back |
 | Booking → agenda → Acquisition | Pass | `supabase/tests/public_booking_acquisition.sql` verified agenda visibility, `Rendez-vous` Kanban placement, linked history and phone/email deduplication, then rolled back |
+| Booking service and visit reason | Pass | `supabase/tests/public_booking_service_choice.sql` verified the public service catalogue, service-specific slots, backend reason validation, normalized agenda persistence and Acquisition concern linkage, then rolled back |
+| Progressive booking mobile UI | Pass | Seven focused steps—service, reason, date, time, identity, contact and review—were exercised at 390×844 through the final confirmation screen without writing a booking or causing horizontal overflow |
 | Public booking management UI | Pass | Live booking form and invalid/expired management-token state verified at 390×844 without submitting patient data |
 | Acquisition core journey | Pass | `supabase/tests/acquisition_p0.sql` completed and rolled back |
 | Invalid media token | Pass | `acquisition-media` returned HTTP 401 and created no object |
