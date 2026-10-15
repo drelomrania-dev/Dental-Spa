@@ -22,12 +22,21 @@ export function DataProvider({ children }){
 
   useEffect(() => {
     let live = true
-    Promise.all([Promise.all(collections.map(async name => [name, await listDocs(name)])), loadClinic()])
+    const granted=new Set((access?.permissions||[]).map(item=>typeof item==='string'?item:item.permission))
+    const allowed=name=>!supabaseEnabled||access?.role==='administrator'||granted.has('*')||({
+      patients:['patients.basic.view','patients.create','patients.edit','payments.collect','clinical.view'],
+      appointments:['appointments.view','appointments.create','appointments.edit'],
+      payments:['payments.collect','payments.view.own','payments.view.all','payments.correct','sessions.own','sessions.manage','reports.finance'],
+      collectionSessions:['payments.collect','sessions.own','sessions.manage','reports.finance'],
+      visits:['clinical.view','clinical.edit'],treatmentPlans:['clinical.view','clinical.edit','plans.create'],
+      priceRequests:['priceRequests.create','priceRequests.approve'],auditEvents:['audit.view']
+    }[name]||[]).some(permission=>granted.has(permission))||['treatments','doctors','resources','bookingLinks','staff','roles'].includes(name)
+    Promise.all([Promise.all(collections.map(async name => [name,allowed(name)?await listDocs(name):[]])), loadClinic()])
       .then(([entries,clinicData]) => { if(live){ setData(Object.fromEntries(entries)); setClinicState(clinicData) } })
       .catch(err=>{console.error('Dental Spa data loading failed',err);if(live)setDataError(err.message||'Impossible de charger les données Supabase.')})
       .finally(() => { if(live) setLoading(false) })
     return () => { live = false }
-  }, [])
+  }, [access?.id])
 
   async function add(name, payload){
     if(name === 'appointments' && appointmentOverlaps(payload, data.appointments)) throw new Error('Ce créneau est déjà occupé pour ce praticien ou cette salle.')

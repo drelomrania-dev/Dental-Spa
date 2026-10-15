@@ -33,19 +33,19 @@ function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
     <Route path="/" element={<Dashboard/>}/>
     <Route path="/patients" element={<RequirePermission permission="patients.basic.view" roles={['administrator']}><Patients/></RequirePermission>}/>
     <Route path="/patients/:patientId" element={<RequirePermission permission="patients.basic.view" roles={['administrator']}><PatientProfile/></RequirePermission>}/>
-    <Route path="/acquisition" element={<RequirePermission roles={['administrator','assistant','practitioner']}><Acquisition/></RequirePermission>}/>
-    <Route path="/acquisition/:leadId" element={<RequirePermission roles={['administrator','assistant','practitioner']}><LeadProfile/></RequirePermission>}/>
+    <Route path="/acquisition" element={<RequirePermission permission="acquisition.view" roles={['administrator']}><Acquisition/></RequirePermission>}/>
+    <Route path="/acquisition/:leadId" element={<RequirePermission permission="acquisition.view" roles={['administrator']}><LeadProfile/></RequirePermission>}/>
     <Route path="/payments" element={<RequirePermission permission="payments.collect" roles={['administrator']}><Payments/></RequirePermission>}/>
-    <Route path="/payment-history" element={<RequirePermission roles={['administrator']}><PaymentHistory/></RequirePermission>}/>
-    <Route path="/receivables" element={<RequirePermission roles={['administrator']}><Receivables/></RequirePermission>}/>
-    <Route path="/appointments" element={<Appointments/>}/>
-    <Route path="/doctors" element={<Doctors/>}/>
-    <Route path="/treatments" element={<Treatments/>}/>
+    <Route path="/payment-history" element={<RequirePermission permission="payments.view.all" roles={['administrator']}><PaymentHistory/></RequirePermission>}/>
+    <Route path="/receivables" element={<RequirePermission permission="payments.view.all" roles={['administrator']}><Receivables/></RequirePermission>}/>
+    <Route path="/appointments" element={<RequirePermission permission="appointments.view" roles={['administrator']}><Appointments/></RequirePermission>}/>
+    <Route path="/doctors" element={<RequirePermission permission="services.view" roles={['administrator']}><Doctors/></RequirePermission>}/>
+    <Route path="/treatments" element={<RequirePermission permission="services.view" roles={['administrator']}><Treatments/></RequirePermission>}/>
     <Route path="/reports" element={<RequirePermission permission="reports.finance" roles={['administrator']}><Reports/></RequirePermission>}/>
-    <Route path="/settings" element={<RequirePermission roles={['administrator']}><Settings/></RequirePermission>}/>
+    <Route path="/settings" element={<RequirePermission permission="settings.manage" roles={['administrator']}><Settings/></RequirePermission>}/>
     <Route path="/clinical" element={<RequirePermission permission="clinical.view" roles={['administrator']}><Clinical/></RequirePermission>}/>
-    <Route path="/approvals" element={<RequirePermission permission="priceRequests.create" roles={['administrator']}><Approvals/></RequirePermission>}/>
-    <Route path="/collection-sessions" element={<RequirePermission permission="sessions.own" roles={['administrator']}><CollectionSessions/></RequirePermission>}/>
+    <Route path="/approvals" element={<RequirePermission permissions={['priceRequests.create','priceRequests.approve']} roles={['administrator']}><Approvals/></RequirePermission>}/>
+    <Route path="/collection-sessions" element={<RequirePermission permissions={['sessions.own','sessions.manage']} roles={['administrator']}><CollectionSessions/></RequirePermission>}/>
   </Route></Routes> }
 
 export default function App(){

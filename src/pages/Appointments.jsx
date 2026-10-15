@@ -1,15 +1,17 @@
 import React, { useMemo, useState } from 'react'
-import { CalendarPlus, Clock3, Pencil, Plus } from 'lucide-react'
+import { CalendarPlus, Check, Clock3, Copy, ExternalLink, Pencil, Plus, Share2 } from 'lucide-react'
 import Topbar from '../components/Topbar'
 import Modal from '../components/Modal'
 import { useData } from '../DataContext'
 import { money, todayISO } from '../utils'
 
 export default function Appointments(){
-  const { appointments,patients,doctors,treatments,resources,add,update,patientName,doctorName } = useData()
+  const { appointments,patients,doctors,treatments,resources,bookingLinks,add,update,patientName,doctorName,can } = useData()
+  const canCreate=can('appointments.create');const canEdit=can('appointments.edit');const canCancel=can('appointments.cancel')
   const [open,setOpen]=useState(false)
   const [editingId,setEditingId]=useState(null)
   const [error,setError]=useState('');const [saving,setSaving]=useState(false)
+  const [copiedLink,setCopiedLink]=useState('')
   const defaultResource=resources.find(resource=>resource.active)?.id||''
   const [form,setForm]=useState({patientId:'',doctorId:'',treatmentId:'',roomId:'',estimatedAmount:'',date:todayISO(),time:'09:00',duration:30,reason:'Consultation',status:'Confirmé'})
   const grouped=useMemo(()=>Object.entries(appointments.reduce((a,x)=>{(a[x.date]??=[]).push(x);return a},{})).sort(([a],[b])=>a.localeCompare(b)),[appointments])
@@ -38,10 +40,30 @@ export default function Appointments(){
     } catch(err) { setError(err.message||'Le rendez-vous n’a pas pu être enregistré.') }
     finally{setSaving(false)}
   }
+  function bookingUrl(link){
+    const publicOrigin=import.meta.env.VITE_PUBLIC_APP_URL||window.location.origin
+    return `${publicOrigin.replace(/\/$/,'')}/book/${encodeURIComponent(link.slug)}`
+  }
+  async function copyBookingLink(link){
+    const url=bookingUrl(link)
+    await navigator.clipboard.writeText(url)
+    setCopiedLink(link.id)
+    window.setTimeout(()=>setCopiedLink(''),1800)
+  }
+  async function shareBookingLink(link){
+    const url=bookingUrl(link)
+    if(navigator.share){
+      try { await navigator.share({title:link.title||'Réserver un rendez-vous',text:'Réservez votre rendez-vous en ligne au Dental Spa.',url}) } catch(err) { if(err?.name!=='AbortError') await copyBookingLink(link) }
+    } else await copyBookingLink(link)
+  }
   return <>
     <Topbar title="Rendez-vous" subtitle="Planning des patients et disponibilités des praticiens."/>
+    {bookingLinks.filter(link=>link.published).length>0&&<section className="panel booking-share-panel">
+      <div className="panel-head"><div><h3>Réservation en ligne</h3><p>Partagez ce lien pour permettre aux patients de choisir leur créneau.</p></div><Share2 size={22}/></div>
+      <div className="booking-share-list">{bookingLinks.filter(link=>link.published).map(link=>{const url=bookingUrl(link);return <div className="booking-share-row" key={link.id}><div className="booking-share-info"><strong>{link.title||'Réserver un rendez-vous'}</strong><span>{url}</span></div><div className="booking-share-actions"><button type="button" className="ghost-btn" onClick={()=>copyBookingLink(link)}>{copiedLink===link.id?<><Check size={15}/> Copié</>:<><Copy size={15}/> Copier</>}</button><button type="button" className="primary-btn" onClick={()=>shareBookingLink(link)}><Share2 size={15}/> Partager</button><a className="icon-btn" href={`/book/${encodeURIComponent(link.slug)}`} target="_blank" rel="noreferrer" aria-label="Ouvrir le lien de réservation" title="Ouvrir le lien de réservation"><ExternalLink size={16}/></a></div></div>})}</div>
+    </section>}
     <section className="panel">
-      <div className="toolbar"><div><span className="soft-badge"><Clock3 size={14}/> Planning clinique</span></div><button className="primary-btn" onClick={newAppointment}><Plus size={18}/> Nouveau rendez-vous</button></div>
+      <div className="toolbar"><div><span className="soft-badge"><Clock3 size={14}/> Planning clinique</span></div>{canCreate&&<button className="primary-btn" onClick={newAppointment}><Plus size={18}/> Nouveau rendez-vous</button>}</div>
       <div className="schedule-list">{grouped.map(([date,items])=><div className="schedule-day" key={date}><div className="schedule-date"><CalendarPlus size={18}/><strong>{date}</strong><span>{items.length} rendez-vous</span></div><div className="schedule-items">{[...items].sort((a,b)=>a.time.localeCompare(b.time)).map(a=>{
         const patient=patients.find(p=>p.id===a.patientId)
         const treatment=treatmentFor(a)
@@ -50,7 +72,7 @@ export default function Appointments(){
           <div className="booking-patient"><strong>{patientName(a.patientId)}</strong><span className="booking-reason">{a.reason || 'Consultation'}</span><span>{patient?.phone || 'Téléphone non renseigné'}</span></div>
           <div className="booking-provider"><strong>{doctorName(a.doctorId)}</strong><span>{a.duration} min · {resources.find(resource=>resource.id===a.roomId)?.name||'Ressource non assignée'}</span></div>
           <div className="booking-cost"><span>À payer</span><strong>{a.estimatedAmount!==undefined&&a.estimatedAmount!==''?money(a.estimatedAmount):treatment?money(treatment.price):'À préciser'}</strong></div>
-          <div className="booking-actions"><span className={`status ${a.status==='Confirmé'?'ok':'wait'}`}>{a.status}</span><button className="appointment-edit" type="button" title="Modifier le rendez-vous" aria-label={`Modifier le rendez-vous de ${patientName(a.patientId)}`} onClick={()=>editAppointment(a)}><Pencil size={14}/></button></div>
+          <div className="booking-actions"><span className={`status ${a.status==='Confirmé'?'ok':'wait'}`}>{a.status}</span>{canEdit&&(a.status!=='Annulé'||canCancel)&&<button className="appointment-edit" type="button" title="Modifier le rendez-vous" aria-label={`Modifier le rendez-vous de ${patientName(a.patientId)}`} onClick={()=>editAppointment(a)}><Pencil size={14}/></button>}</div>
         </div>
       })}</div></div>)}</div>
     </section>
@@ -65,7 +87,7 @@ export default function Appointments(){
         <label>Montant à prévoir (DH)<input type="number" min="0" step="50" placeholder={selectedTreatment?String(selectedTreatment.price):'À préciser'} value={form.estimatedAmount} onChange={e=>setForm({...form,estimatedAmount:e.target.value})}/></label>
         <label>Durée (min)<input type="number" min="15" step="15" value={form.duration} onChange={e=>setForm({...form,duration:e.target.value})}/></label>
         <label>Motif<input required value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})}/></label>
-        <label>Statut<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>{(editingId?['En attente','Confirmé','Arrivé','En attente clinique','En consultation','Terminé','Annulé','No-show']:['En attente','Confirmé']).map(s=><option key={s}>{s}</option>)}</select></label>
+        <label>Statut<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>{(editingId?['En attente','Confirmé','Arrivé','En attente clinique','En consultation','Terminé','Annulé','No-show']:['En attente','Confirmé']).filter(status=>status!=='Annulé'||canCancel||form.status==='Annulé').map(s=><option key={s}>{s}</option>)}</select></label>
         {error&&<div className="form-error full" role="alert">{error}</div>}
         <div className="form-actions full"><button type="button" className="ghost-btn" onClick={()=>setOpen(false)}>Annuler</button><button className="primary-btn" disabled={saving}>{saving?'Enregistrement…':'Enregistrer'}</button></div>
       </form>

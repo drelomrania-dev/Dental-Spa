@@ -26,10 +26,17 @@ export default function Sidebar({open=false,onClose=()=>{},onNavigate=()=>{}}){
   const { can, currentUser } = useData()
   const storageLabel = supabaseEnabled ? 'Supabase distant · connecté' : firebaseEnabled ? 'Firebase · connecté' : 'Stockage local · actif'
   const visible = new Set(nav.filter(([to]) => {
+    if(to==='/acquisition') return can('acquisition.view')
+    if(to==='/patients') return can('patients.basic.view')
+    if(to==='/payments') return can('payments.collect')
+    if(to==='/appointments') return can('appointments.view')
+    if(['/doctors','/treatments'].includes(to)) return can('services.view')
     if(['/clinical'].includes(to)) return can('clinical.view')
-    if(['/approvals'].includes(to)) return can('priceRequests.create') || currentUser?.role === 'administrator'
+    if(['/approvals'].includes(to)) return can('priceRequests.create') || can('priceRequests.approve') || currentUser?.role === 'administrator'
     if(to==='/reports') return can('reports.finance') || currentUser?.role === 'administrator'
-    if(['/receivables','/payment-history'].includes(to)) return currentUser?.role === 'administrator'
+    if(['/receivables','/payment-history'].includes(to)) return can('payments.view.all') || currentUser?.role === 'administrator'
+    if(to==='/collection-sessions') return can('sessions.own') || can('sessions.manage')
+    if(to==='/settings') return can('settings.manage') || currentUser?.role === 'administrator'
     return true
   }).map(([to])=>to))
   return (
@@ -46,7 +53,7 @@ export default function Sidebar({open=false,onClose=()=>{},onNavigate=()=>{}}){
         <div className="sidebar-orb">✦</div>
         <strong>Cabinet organisé</strong>
         <p>Paiements, rendez-vous et patients au même endroit.</p>
-        <NavLink to="/payments" className="sidebar-cta">+ Nouveau paiement</NavLink>
+        {can('payments.collect')?<NavLink to="/payments" className="sidebar-cta">+ Nouveau paiement</NavLink>:can('appointments.view')&&<NavLink to="/appointments" className="sidebar-cta">Voir l’agenda</NavLink>}
       </div>
       <div className="sidebar-footer">{storageLabel}</div>
     </aside>
