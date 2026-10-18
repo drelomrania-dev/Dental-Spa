@@ -28,6 +28,33 @@ Updated: 2026-10-18
 5. Complete clinic/legal review of Moroccan receipt wording, numbering and retention.
 6. Run the simultaneous public-booking load test and optional edge/WAF abuse test.
 
+## Migration 028 application checklist
+
+Migration `supabase/migrations/028_security_hardening.sql` is fail-closed by design. Apply it only through the approved Supabase SQL/migration path after completing these checks:
+
+1. Export or otherwise verify a recoverable snapshot of the target database. On the Free plan, scheduled Supabase backups are unavailable; do not treat the migration as recoverable until an external backup/restore path has been tested or the plan is upgraded.
+2. Run the preflight query below in the target project. Any returned row must be resolved before applying migration 028; the migration intentionally aborts on blank or duplicate published slugs.
+
+```sql
+select lower(trim(data->>'slug')) as slug, count(*) as published_count
+from public.app_records
+where collection = 'bookingLinks'
+  and coalesce((data->>'published')::boolean, false) = true
+group by lower(trim(data->>'slug'))
+having nullif(lower(trim(data->>'slug')), '') is null
+    or count(*) > 1;
+```
+
+3. Apply the migration in staging first, then run `supabase/tests/security_hardening.sql` with the project’s SQL test procedure.
+4. Verify one assigned practitioner can complete a clinical visit while an unassigned practitioner is denied, and verify public booking still resolves its published slug.
+5. Record the migration result and recovery evidence in the release log before enabling real patient traffic.
+
+The repository release can be built and deployed without applying this migration, but production database hardening is not complete until this checklist has passed.
+
+## Automated release gate
+
+Run `pnpm verify:release` locally. The same command runs in `.github/workflows/release-readiness.yml` on pull requests and pushes to `main`; it uses local-data mode and does not require production secrets. Authenticated E2E remains a separate staging-only gate described in `docs/E2E_RUNBOOK.md`.
+
 ## Release conclusion
 
 The MVP is technically deployable and the core booking, acquisition, clinical and finance workflows are implemented. It is not yet operationally cleared for real patient or financial data until the second-account E2E, recovery strategy and clinic/legal checks are complete.
