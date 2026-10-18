@@ -18,6 +18,7 @@ Updated: 2026-10-18
 - Email authentication is enabled.
 - Leaked-password protection is disabled because the project is on the Free plan and the feature requires Pro or above.
 - Scheduled project backups are unavailable on the Free plan.
+- Migration `028_security_hardening.sql` was applied successfully to the connected production project on 2026-10-18 after the published-booking-slug preflight returned zero rows.
 
 ## Required before real patient use
 
@@ -49,7 +50,7 @@ having nullif(lower(trim(data->>'slug')), '') is null
 4. Verify one assigned practitioner can complete a clinical visit while an unassigned practitioner is denied, and verify public booking still resolves its published slug.
 5. Record the migration result and recovery evidence in the release log before enabling real patient traffic.
 
-The repository release can be built and deployed without applying this migration, but production database hardening is not complete until this checklist has passed.
+The repository release can be built and deployed without applying this migration, but production database hardening is not complete until this checklist has passed. The connected production project has now passed the slug preflight and migration application steps; staging regression execution remains recommended before broader rollout.
 
 ## Automated release gate
 
