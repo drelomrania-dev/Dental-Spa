@@ -56,6 +56,18 @@ The repository release can be built and deployed without applying this migration
 
 Run `pnpm verify:release` locally. The same command runs in `.github/workflows/release-readiness.yml` on pull requests and pushes to `main`; it uses local-data mode and does not require production secrets. Authenticated E2E remains a separate staging-only gate described in `docs/E2E_RUNBOOK.md`.
 
+## Staff invitation Edge Function configuration
+
+The `staff-invite-link` function must be configured with these server-side Supabase Edge Function variables before invitation links are used:
+
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are required by the runtime; the service-role key must never be exposed to the browser.
+- `PUBLIC_APP_URL` should be the canonical production origin, for example `https://dental-spa-taupe.vercel.app`.
+- `ALLOWED_ORIGINS` may contain a comma-separated union of additional exact origins used by approved preview or staging deployments. Values are normalized to URL origins; paths and credentials are not valid allowlist entries.
+
+The function combines configured origins with its safe localhost and production defaults. It returns `Access-Control-Allow-Origin` only for an allowed request origin; disallowed origins receive no CORS allow header. The frontend derives the production origin from `VITE_PUBLIC_APP_URL` and URL-encodes the invitation token in `/join/<token>`.
+
+Release checks for this flow must cover anonymous `401`, non-administrator `403`, invalid redirect rejection, a valid administrator invitation, and a browser request from each approved production/staging origin. Updating `PUBLIC_APP_URL` or `ALLOWED_ORIGINS` requires redeploying the Edge Function configuration; this repository change does not update Supabase settings automatically.
+
 ## Release conclusion
 
 The MVP is technically deployable and the core booking, acquisition, clinical and finance workflows are implemented. It is not yet operationally cleared for real patient or financial data until the second-account E2E, recovery strategy and clinic/legal checks are complete.

@@ -6,7 +6,11 @@ const configuredOrigins=[Deno.env.get("PUBLIC_APP_URL")||"",...(Deno.env.get("AL
   .map(value=>{try{return new URL(value.trim()).origin}catch{return null}})
   .filter((value):value is string=>Boolean(value))
 const allowedOrigins=new Set([...defaultOrigins,...configuredOrigins])
-function cors(origin:string|null){return {"Access-Control-Allow-Origin":origin&&allowedOrigins.has(origin)?origin:"https://dental-spa-taupe.vercel.app","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"}}
+function cors(origin:string|null){
+  const headers={"Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"} as Record<string,string>
+  if(origin&&allowedOrigins.has(origin))headers["Access-Control-Allow-Origin"]=origin
+  return headers
+}
 function json(body:unknown,status:number,origin:string|null){return new Response(JSON.stringify(body),{status,headers:{...cors(origin),"Content-Type":"application/json"}})}
 async function sha256Hex(value:string){const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));return Array.from(new Uint8Array(bytes)).map(byte=>byte.toString(16).padStart(2,"0")).join("")}
 
