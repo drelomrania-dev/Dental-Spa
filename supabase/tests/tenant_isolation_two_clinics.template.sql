@@ -1,0 +1,83 @@
+-- TEMPLATE ONLY: do not run until the fixture prerequisites below are satisfied.
+--
+-- Purpose: explicit two-clinic tenant-isolation regression coverage.
+-- Existing tests run inside one transaction with an existing administrator. This
+-- template deliberately does not invent a clinic-membership bootstrap path.
+-- Provision the two fixtures through the project's controlled service-role test
+-- setup, then replace the placeholders before executing this file.
+--
+-- Required, independently provisioned fixtures:
+--   :clinic_a, :clinic_b       two distinct clinics
+--   :admin_a, :admin_b         two distinct auth.users identities
+--   staff_profiles(admin_a)=clinic_a, role=administrator, active=true
+--   staff_profiles(admin_b)=clinic_b, role=administrator, active=true
+--   one uniquely identifiable patient and app_record in each clinic
+--
+-- Required safety checks before replacing placeholders:
+--   1. Both users exist in auth.users and are not the same identity.
+--   2. Both staff rows are active administrators and map one-to-one to the
+--      intended clinic.
+--   3. The fixture records are owned by the intended clinic.
+--   4. The setup is isolated to a disposable development/staging database.
+--   5. The test is executed with a transaction and rolled back.
+--
+-- Suggested execution shape, matching the existing SQL tests:
+--
+-- begin;
+--
+-- -- Context A: simulate an authenticated request for admin_a.
+-- select set_config('request.jwt.claim.sub', ':admin_a', true);
+-- set local role authenticated;
+-- do $clinic_a_visibility$
+-- begin
+--   if current_clinic_id() <> ':clinic_a'::uuid then
+--     raise exception 'Admin A resolved to the wrong clinic';
+--   end if;
+--   if (select count(*) from clinics) <> 1 then
+--     raise exception 'Admin A can see another clinic';
+--   end if;
+--   if not exists (select 1 from patients where clinic_id=':clinic_a'::uuid
+--                  and app_id=':patient_a_app_id') then
+--     raise exception 'Admin A cannot see its own patient';
+--   end if;
+--   if exists (select 1 from patients where clinic_id=':clinic_b'::uuid) then
+--     raise exception 'Admin A can see clinic B patient data';
+--   end if;
+--   if exists (select 1 from app_records where clinic_id=':clinic_b'::uuid) then
+--     raise exception 'Admin A can see clinic B legacy records';
+--   end if;
+-- end
+-- $clinic_a_visibility$;
+--
+-- reset role;
+--
+-- -- Context B: repeat the same assertions with clinic/user ownership reversed.
+-- select set_config('request.jwt.claim.sub', ':admin_b', true);
+-- set local role authenticated;
+-- do $clinic_b_visibility$
+-- begin
+--   if current_clinic_id() <> ':clinic_b'::uuid then
+--     raise exception 'Admin B resolved to the wrong clinic';
+--   end if;
+--   if (select count(*) from clinics) <> 1 then
+--     raise exception 'Admin B can see another clinic';
+--   end if;
+--   if not exists (select 1 from patients where clinic_id=':clinic_b'::uuid
+--                  and app_id=':patient_b_app_id') then
+--     raise exception 'Admin B cannot see its own patient';
+--   end if;
+--   if exists (select 1 from patients where clinic_id=':clinic_a'::uuid) then
+--     raise exception 'Admin B can see clinic A patient data';
+--   end if;
+--   if exists (select 1 from app_records where clinic_id=':clinic_a'::uuid) then
+--     raise exception 'Admin B can see clinic A legacy records';
+--   end if;
+-- end
+-- $clinic_b_visibility$;
+--
+-- reset role;
+-- rollback;
+--
+-- Extend the same A/B assertions to appointments, clinical_visits,
+-- treatment_plans, finance_accounts, finance_transactions, audit_events,
+-- leads, and staff_profiles before marking the regression as passed.
