@@ -8,7 +8,8 @@ export async function loadStaffManagement(){requireRemote();return unwrap(await 
 export async function createStaffAccess({email,name,role}){
   requireRemote()
   const invitation=unwrap(await supabase.rpc('create_staff_invitation',{p_email:email,p_display_name:name,p_role:role,p_expires_days:7}))
-  const redirectTo=`${window.location.origin}${invitation.path}`
+  const publicOrigin=((import.meta.env.PROD && import.meta.env.VITE_PUBLIC_APP_URL)||window.location.origin).replace(/\/$/,'')
+  const redirectTo=`${publicOrigin}${invitation.path}`
   const {data,error}=await supabase.functions.invoke('staff-invite-link',{body:{token:invitation.token,redirectTo}})
   if(error||!data?.actionLink){await supabase.rpc('revoke_staff_invitation',{p_invitation_id:invitation.id});throw error||new Error('Lien d’accès indisponible.')}
   return {...invitation,actionLink:data.actionLink}

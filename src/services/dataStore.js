@@ -1,5 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore'
-import { db, firebaseEnabled } from './firebase'
+import { firebaseEnabled, getFirebaseStore } from './firebase'
 import { seedData } from '../data/seed'
 import { remoteClinicId, supabase, supabaseEnabled } from './supabase'
 import { loadFinanceSnapshot, openFinanceSession, recordFinancePayment, submitFinanceSession, validateFinanceSession } from './finance'
@@ -44,7 +43,8 @@ export async function listDocs(name){
     return data.map(row => ({ ...row.data, id:row.id }))
   }
   if (!firebaseEnabled) return localList(name)
-  const snapshot = await getDocs(collection(db, name))
+  const firebase = await getFirebaseStore()
+  const snapshot = await firebase.getDocs(firebase.collection(firebase.db, name))
   return snapshot.docs.map(d => ({ id:d.id, ...d.data() }))
 }
 
@@ -68,7 +68,8 @@ export async function createDoc(name, data){
     localSave(name, rows)
     return row
   }
-  const ref = await addDoc(collection(db, name), data)
+  const firebase = await getFirebaseStore()
+  const ref = await firebase.addDoc(firebase.collection(firebase.db, name), data)
   return { id:ref.id, ...data }
 }
 
@@ -95,7 +96,8 @@ export async function editDoc(name, id, patch){
     localSave(name, rows)
     return rows.find(r => r.id === id)
   }
-  await updateDoc(doc(db, name, id), patch)
+  const firebase = await getFirebaseStore()
+  await firebase.updateDoc(firebase.doc(firebase.db, name, id), patch)
   return { id, ...patch }
 }
 
@@ -111,7 +113,8 @@ export async function removeDoc(name, id){
     localSave(name, localList(name).filter(r => r.id !== id))
     return
   }
-  await deleteDoc(doc(db, name, id))
+  const firebase = await getFirebaseStore()
+  await firebase.deleteDoc(firebase.doc(firebase.db, name, id))
 }
 
 export function resetDemoData(){

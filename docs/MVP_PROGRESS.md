@@ -2,7 +2,7 @@
 
 ## Booking
 
-**Implemented:** Calendly-style mobile-first journey with one decision per screen, selectable booking-eligible services, a required patient-written visit reason, service-specific durations and live slots, normalized internal agenda, transactional practitioner and chair/room conflict checks, configurable active resources, booking-link resource assignment, patient/lead deduplication, contact-level abuse limits, secure management links, public rescheduling/cancellation, references and responsive layouts. Every public booking keeps the selected service and reason in both the patient agenda and the Acquisition `Rendez-vous` stage with an auditable history.
+**Implemented:** Calendly-style mobile-first journey with one decision per screen, selectable booking-eligible services, a required patient-written visit reason, service-specific durations and live slots, normalized internal agenda, transactional practitioner and chair/room conflict checks, configurable active resources, shareable booking links with resource assignment, patient/lead deduplication, contact-level abuse limits, secure management links, public rescheduling/cancellation, references and responsive layouts. Every public booking keeps the selected service and reason in both the patient agenda and the Acquisition `Rendez-vous` stage with an auditable history.
 **Verified:** Appointment, resource/rate-limit, service/reason and booking-to-Acquisition SQL suites, rollback cleanup, complete seven-step flow at 390×844 without horizontal overflow, desktop UI, invalid-token management UI and production build.
 **Remaining:** Optional IP-level edge/WAF throttling for failed requests and a simultaneous two-client HTTP load test.
 **Risks / blockers:** None for the core booking-to-agenda-to-pipeline journey.
@@ -32,5 +32,5 @@
 
 **Implemented:** GitHub `main` auto-deploy, mobile shell, production Supabase default using a browser-safe publishable key.  
 **Verified:** Production root requires Supabase authentication and `/book/consultation` loads live remote availability.  
-**Remaining:** Configure custom domain, production SMTP for optional automated messages, backups and monitoring.
-**Risks / blockers:** Supabase leaked-password protection is not enabled yet.
+**Remaining:** Configure custom domain, production SMTP for optional automated messages, backups and monitoring. The connected Supabase project is currently on the Free plan, which does not include scheduled project backups.
+**Risks / blockers:** Supabase leaked-password protection is unavailable on the current Free plan, and a backup/restore strategy must be established before real patient data is loaded.

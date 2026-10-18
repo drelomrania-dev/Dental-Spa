@@ -3,6 +3,7 @@ import { clearRemoteClinicCache, ensureRemoteClinic, loadCurrentAccessContext, s
 
 const AuthContext = createContext(null)
 const staffInvitationKey='dentalflow:staff-invitation-token'
+const demoSeedEnabled=import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEMO_SEED === 'true'
 
 export function AuthProvider({children}){
   const [session,setSession]=useState(null); const [loading,setLoading]=useState(supabaseEnabled); const [ready,setReady]=useState(!supabaseEnabled); const [error,setError]=useState(''); const [setupError,setSetupError]=useState(''); const [access,setAccess]=useState(null);const [bootstrapAvailable,setBootstrapAvailable]=useState(false)
@@ -14,7 +15,7 @@ export function AuthProvider({children}){
     return ()=>{live=false;listener.subscription.unsubscribe()}
   },[])
   async function claimPendingInvitation(){const token=localStorage.getItem(staffInvitationKey);if(!token)return null;const {data,error:claimError}=await supabase.rpc('claim_staff_invitation',{p_token:token});if(claimError)throw claimError;localStorage.removeItem(staffInvitationKey);return data}
-  async function prepare(user){ await claimPendingInvitation(); const clinicId=await ensureRemoteClinic(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Administrateur'); await seedRemoteData(); const nextAccess=await loadCurrentAccessContext(); setAccess(nextAccess); return clinicId }
+  async function prepare(user){ await claimPendingInvitation(); const clinicId=await ensureRemoteClinic(user.user_metadata?.full_name || user.email?.split('@')[0] || 'Administrateur'); if(demoSeedEnabled) await seedRemoteData(); const nextAccess=await loadCurrentAccessContext(); setAccess(nextAccess); return clinicId }
   useEffect(()=>{
     if(!supabaseEnabled||!session?.user){clearRemoteClinicCache();setAccess(null);setReady(!supabaseEnabled);setSetupError('');return}
     let live=true

@@ -1,32 +1,32 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { DataProvider } from './DataContext'
 import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import Patients from './pages/Patients'
-import PatientProfile from './pages/PatientProfile'
-import Payments from './pages/Payments'
-import PaymentHistory from './pages/PaymentHistory'
-import Receivables from './pages/Receivables'
-import Appointments from './pages/Appointments'
-import Doctors from './pages/Doctors'
-import Treatments from './pages/Treatments'
-import Reports from './pages/Reports'
-import Settings from './pages/Settings'
-import PublicBooking from './pages/PublicBooking'
-import Clinical from './pages/Clinical'
-import Approvals from './pages/Approvals'
-import CollectionSessions from './pages/CollectionSessions'
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Patients = lazy(() => import('./pages/Patients'))
+const PatientProfile = lazy(() => import('./pages/PatientProfile'))
+const Payments = lazy(() => import('./pages/Payments'))
+const PaymentHistory = lazy(() => import('./pages/PaymentHistory'))
+const Receivables = lazy(() => import('./pages/Receivables'))
+const Appointments = lazy(() => import('./pages/Appointments'))
+const Doctors = lazy(() => import('./pages/Doctors'))
+const Treatments = lazy(() => import('./pages/Treatments'))
+const Reports = lazy(() => import('./pages/Reports'))
+const Settings = lazy(() => import('./pages/Settings'))
+const PublicBooking = lazy(() => import('./pages/PublicBooking'))
+const Clinical = lazy(() => import('./pages/Clinical'))
+const Approvals = lazy(() => import('./pages/Approvals'))
+const CollectionSessions = lazy(() => import('./pages/CollectionSessions'))
 import { AuthProvider } from './AuthContext'
 import AuthGate from './components/AuthGate'
-import PublicBookingRemote from './pages/PublicBookingRemote'
+const PublicBookingRemote = lazy(() => import('./pages/PublicBookingRemote'))
 import { supabaseEnabled } from './services/supabase'
 import RequirePermission from './components/RequirePermission'
-import Acquisition from './pages/Acquisition'
-import LeadProfile from './pages/LeadProfile'
-import PublicIntake from './pages/PublicIntake'
-import PublicManageBooking from './pages/PublicManageBooking'
-import StaffJoin from './pages/StaffJoin'
+const Acquisition = lazy(() => import('./pages/Acquisition'))
+const LeadProfile = lazy(() => import('./pages/LeadProfile'))
+const PublicIntake = lazy(() => import('./pages/PublicIntake'))
+const PublicManageBooking = lazy(() => import('./pages/PublicManageBooking'))
+const StaffJoin = lazy(() => import('./pages/StaffJoin'))
 import './styles.css'
 
 function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
@@ -49,11 +49,11 @@ function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
   </Route></Routes> }
 
 export default function App(){
-  return <BrowserRouter><AuthProvider><Routes>
+  return <BrowserRouter><AuthProvider><Suspense fallback={<div className="loading-state">Chargement…</div>}><Routes>
     <Route path="/book/:slug" element={supabaseEnabled?<PublicBookingRemote/>:<DataProvider><PublicBooking/></DataProvider>}/>
     <Route path="/manage-booking/:token" element={supabaseEnabled?<PublicManageBooking/>:<main className="public-booking"><div className="public-card"><h1>Gestion en ligne indisponible</h1><p>Activez Supabase pour utiliser ce lien sécurisé.</p></div></main>}/>
     <Route path="/intake/:token" element={<PublicIntake/>}/>
     <Route path="/join/:token" element={<StaffJoin/>}/>
     <Route path="/*" element={<AuthGate><DataProvider><InternalRoutes/></DataProvider></AuthGate>}/>
-  </Routes></AuthProvider></BrowserRouter>
+  </Routes></Suspense></AuthProvider></BrowserRouter>
 }

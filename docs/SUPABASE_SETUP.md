@@ -1,23 +1,22 @@
-# Supabase migration plan
+# Supabase production setup
 
-The Supabase MCP connection is configured for the Dental Spa project. The application remains localStorage-first until the schema and access policies are reviewed.
+The production application uses Supabase Auth, PostgreSQL, RLS, Storage and Edge Functions. LocalStorage remains available only as a development fallback when `VITE_DATA_BACKEND` is not set to `supabase`.
 
 ## Current status
 
 - MCP server: connected and authenticated.
-- Local mode: still the default.
-- Schema draft: `supabase/schema.sql`.
-- RLS: enabled with no permissive policies, intentionally failing closed.
+- Production backend: active and used by the deployed application.
+- Schema and migrations: versioned in `supabase/schema.sql` and `supabase/migrations/`.
+- RLS: enabled with clinic-scoped role policies and RPC-only boundaries for sensitive patient and finance data.
+- Acceptance suites: versioned in `supabase/tests/` and documented in `docs/MVP_TEST_REPORT.md`.
 
-## Safe migration sequence
+## Safe environment and release sequence
 
-1. Review `supabase/schema.sql` in the Supabase SQL editor.
-2. Create a non-production branch/project for acceptance testing.
-3. Apply the schema and confirm all RLS tables are inaccessible without an authenticated clinic member.
-4. Configure Firebase/Supabase Auth identity mapping and clinic membership.
-5. Add clinic-scoped policies for administrator, assistant, and practitioner permissions.
-6. Build a Supabase adapter behind the existing data-store interface.
-7. Run booking race, payment idempotency, confidentiality, and persistence tests against the branch.
-8. Keep the current localStorage mode until the branch passes acceptance testing; only then enable a reviewed Supabase adapter.
+1. Apply migrations to a non-production Supabase project first.
+2. Run the SQL acceptance suites and confirm rollback cleanup.
+3. Verify Auth redirect URLs, SMTP settings, leaked-password protection and Edge Function secrets.
+4. Run the two-account browser E2E and the full operational journey.
+5. Confirm backups, restoration ownership, monitoring and incident procedures.
+6. Promote the reviewed migration set to production and record the release.
 
-Do not import real patient data until backups, retention, audit logging, and access review are complete.
+Do not import real patient data until backups, retention, audit logging, access review and clinic/legal validation are complete.

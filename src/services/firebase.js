@@ -1,6 +1,3 @@
-import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
-
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -13,5 +10,17 @@ const firebaseConfig = {
 // Local storage is the intentional default. Firebase becomes active only after
 // the operator explicitly opts in with VITE_USE_FIREBASE=true.
 export const firebaseEnabled = import.meta.env.VITE_USE_FIREBASE === 'true' && Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId)
-export const firebaseApp = firebaseEnabled ? initializeApp(firebaseConfig) : null
-export const db = firebaseEnabled ? getFirestore(firebaseApp) : null
+
+let firebaseStorePromise = null
+
+export function getFirebaseStore(){
+  if(!firebaseEnabled) return Promise.resolve(null)
+  if(!firebaseStorePromise){
+    firebaseStorePromise = Promise.all([import('firebase/app'), import('firebase/firestore')]).then(([appModule, firestoreModule]) => {
+      const app = appModule.initializeApp(firebaseConfig)
+      const db = firestoreModule.getFirestore(app)
+      return { db, ...firestoreModule }
+    })
+  }
+  return firebaseStorePromise
+}
