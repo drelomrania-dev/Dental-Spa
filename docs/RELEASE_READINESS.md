@@ -66,7 +66,7 @@ The `staff-invite-link` function must be configured with these server-side Supab
 
 The function combines configured origins with its safe localhost and production defaults. It returns `Access-Control-Allow-Origin` only for an allowed request origin; disallowed origins receive no CORS allow header. The frontend derives the production origin from `VITE_PUBLIC_APP_URL` and URL-encodes the invitation token in `/join/<token>`.
 
-Release checks for this flow must cover anonymous `401`, non-administrator `403`, invalid redirect rejection, a valid administrator invitation, and a browser request from each approved production/staging origin. Updating `PUBLIC_APP_URL` or `ALLOWED_ORIGINS` requires redeploying the Edge Function configuration; this repository change does not update Supabase settings automatically.
+Release checks for this flow must cover anonymous `401`, non-administrator `403`, invalid redirect rejection, a valid administrator invitation, and a browser request from each approved production/staging origin. Updating `PUBLIC_APP_URL` or `ALLOWED_ORIGINS` requires redeploying the Edge Function configuration; this repository change does not update Supabase settings automatically. The reproducible deployment and status-only smoke-check procedure is in `docs/SUPABASE_EDGE_FUNCTION_DEPLOYMENT.md`.
 
 ## Release conclusion
 
