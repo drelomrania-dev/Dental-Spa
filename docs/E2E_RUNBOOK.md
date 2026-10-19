@@ -1,28 +1,199 @@
 # Playwright E2E runbook
 
-This workspace contains a browser-test foundation for Dental Spa OS. It does not create users, seed production data, or modify application code.
+This runbook is for a disposable Supabase staging project only. It does not
+create users, seed data, call the service-role API, or modify production.
 
-## Install and run
+There are two different regression tracks:
 
-```powershell
-pnpm install
-pnpm e2e:install
-pnpm e2e
+1. **Authenticated Playwright suite:** one synthetic clinic with one
+   administrator and one assistant. This is the currently skipped suite in
+   `e2e/authenticated.spec.js`.
+2. **Two-clinic tenant isolation:** two synthetic clinics with one
+   administrator in each. This is a SQL/RLS regression documented in
+   `docs/TENANT_ISOLATION_TEST_RUNBOOK.md`, not a Playwright fixture.
+
+Never combine these fixtures with real patient, staff, financial, or booking
+data. Use a separate Supabase project or an isolated staging branch whose
+project URL and ref have been checked by a second operator.
+
+## Safety gate before provisioning
+
+Stop if any check fails:
+
+- [ ] The Supabase dashboard project is explicitly labelled `staging` or
+      `disposable`.
+- [ ] The project ref is not the production project ref.
+- [ ] The target URL is not the production URL and is not the live Vercel
+      origin.
+- [ ] No real email address, phone number, patient name, or financial value
+      will be used.
+- [ ] The operator has recorded the fixture prefix and an expiry date.
+- [ ] The operator has a cleanup window and can remove the Auth users after
+      the run.
+
+The repository must not receive passwords, anon keys, service-role keys, or
+fixture UUIDs. Keep all values in the current PowerShell session or in a
+local ignored file.
+
+## Track A — two-account authenticated Playwright suite
+
+This track requires **one synthetic clinic** and two synthetic Auth accounts:
+
+| Account | Auth email | `staff_profiles.role` | Expected access |
+| --- | --- | --- | --- |
+| admin | unique `*.invalid` address | `administrator` | `/reports`, `/settings` |
+| assistant | different unique `*.invalid` address | `assistant` | `/appointments`, not `/reports` or `/settings` |
+
+### 1. Create the two Auth users manually
+
+In the staging Supabase dashboard, open **Authentication → Users → Add user**
+and create both users with a temporary password. Do not enable an email
+invitation that could reach a real mailbox. Record only the two generated user
+UUIDs in a local scratchpad; do not commit them.
+
+Use a deterministic but disposable naming scheme, for example:
+
+```text
+e2e-20261019-admin-<random>@example.invalid
+e2e-20261019-assistant-<random>@example.invalid
 ```
 
-Without Supabase test configuration, the local runner starts Vite in local-data mode. Public shell and invalid-token tests run without credentials.
+The `.invalid` domain prevents accidental delivery. Store the passwords only
+in the local environment variables used for the run.
 
-## Authenticated two-context tests
+### 2. Add the clinic and staff memberships in the staging SQL editor
 
-Use an isolated Supabase project or dedicated synthetic clinic. Never use real patient data. Set `E2E_SUPABASE_URL`, `E2E_SUPABASE_ANON_KEY`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_ASSISTANT_EMAIL`, and `E2E_ASSISTANT_PASSWORD`, then run `pnpm e2e`. For a deployed test target, set `E2E_BASE_URL`. Do not point this suite at production until isolated test accounts and cleanup procedures are approved.
+Run the following as the staging project owner in the Supabase SQL editor.
+Replace every `REPLACE_*` value before running. The block is intentionally
+transactional and refuses to continue if a UUID is missing or both accounts
+are the same. It must never be run against production.
 
-## Current coverage
+```sql
+begin;
 
-- Public booking shell at `/book/consultation`.
-- Safe invalid-token states for booking management and staff invitations.
-- Administrator login shell.
-- Administrator report access.
-- Assistant denial of reports and allowance for appointments.
-- Independent browser sessions for administrator and assistant.
+do $fixture$
+declare
+  v_clinic uuid := nullif('REPLACE_CLINIC_ID', '')::uuid;
+  v_admin uuid := nullif('REPLACE_ADMIN_USER_ID', '')::uuid;
+  v_assistant uuid := nullif('REPLACE_ASSISTANT_USER_ID', '')::uuid;
+begin
+  if v_clinic is null or v_admin is null or v_assistant is null then
+    raise exception 'Replace all staging fixture UUIDs before running';
+  end if;
+  if v_admin = v_assistant then
+    raise exception 'Admin and assistant must be different Auth users';
+  end if;
+  if not exists (select 1 from auth.users where id = v_admin)
+     or not exists (select 1 from auth.users where id = v_assistant) then
+    raise exception 'Both Auth users must already exist in staging';
+  end if;
+  if exists (select 1 from public.staff_profiles where id in (v_admin, v_assistant)) then
+    raise exception 'A fixture user already has a staff profile; stop and inspect';
+  end if;
 
-Authenticated checks verify UI route structure, not database authorization proof. Pair them with the Supabase SQL/RLS suites and a staging recovery drill before release.
+  insert into public.clinics(id, name, currency, timezone, address)
+  values (v_clinic, 'E2E disposable clinic 20261019', 'MAD', 'Africa/Casablanca', 'STAGING ONLY');
+
+  insert into public.staff_profiles(id, clinic_id, display_name, role, active)
+  values
+    (v_admin, v_clinic, 'E2E Administrator', 'administrator', true),
+    (v_assistant, v_clinic, 'E2E Assistant', 'assistant', true);
+end
+$fixture$;
+
+commit;
+```
+
+The clinic UUID must be a new UUID generated by the operator before the run.
+Do not reuse an existing clinic ID. This makes cleanup and audit explicit.
+
+After the SQL block, verify the fixture before running the browser suite:
+
+```sql
+select s.id, s.clinic_id, s.display_name, s.role, s.active
+from public.staff_profiles s
+where s.id in ('REPLACE_ADMIN_USER_ID'::uuid, 'REPLACE_ASSISTANT_USER_ID'::uuid);
+```
+
+Expected result: exactly two active rows, the same clinic ID, and roles
+`administrator` and `assistant`. Do not proceed if either account is mapped to
+another clinic.
+
+### 3. Run the authenticated suite without committing secrets
+
+From the repository root, use a fresh PowerShell session. The command below
+keeps values in process environment variables and does not write an env file:
+
+```powershell
+$env:E2E_BASE_URL = 'https://<staging-origin>'
+$env:E2E_SUPABASE_URL = 'https://<staging-project-ref>.supabase.co'
+$env:E2E_SUPABASE_ANON_KEY = '<staging-anon-key>'
+$env:E2E_ADMIN_EMAIL = 'e2e-20261019-admin-<random>@example.invalid'
+$env:E2E_ADMIN_PASSWORD = '<temporary-admin-password>'
+$env:E2E_ASSISTANT_EMAIL = 'e2e-20261019-assistant-<random>@example.invalid'
+$env:E2E_ASSISTANT_PASSWORD = '<temporary-assistant-password>'
+pnpm e2e -- e2e/authenticated.spec.js
+```
+
+The suite should report three authenticated tests passing:
+
+- administrator login shell;
+- administrator report access and assistant report denial;
+- assistant appointment access and independent administrator session.
+
+If the tests are skipped, inspect the printed missing-variable reason. If a
+login fails, stop and verify the staging URL, Auth user status, passwords, and
+staff rows; do not enable demo seed or point the suite at production.
+
+Run the full local-data gate separately when needed:
+
+```powershell
+Remove-Item Env:E2E_BASE_URL,Env:E2E_SUPABASE_URL,Env:E2E_SUPABASE_ANON_KEY,Env:E2E_ADMIN_EMAIL,Env:E2E_ADMIN_PASSWORD,Env:E2E_ASSISTANT_EMAIL,Env:E2E_ASSISTANT_PASSWORD -ErrorAction SilentlyContinue
+pnpm verify:release
+```
+
+### 4. Cleanup Track A
+
+After saving the test report, delete the two Auth users in the staging
+dashboard. Then, as staging owner, remove the disposable staff rows and clinic
+only if no other fixture data references them. Prefer deleting the whole
+disposable project/branch when possible. Confirm with a read-only query that
+the fixture prefix no longer exists. Never use a broad delete against a shared
+staging project.
+
+## Track B — two-clinic tenant isolation
+
+The Playwright suite does not prove tenant isolation. Use the controlled
+service-role/admin procedure described in
+`docs/TENANT_ISOLATION_TEST_RUNBOOK.md` to provision two synthetic clinics and
+two administrator identities, then replace the placeholders in
+`supabase/tests/tenant_isolation_two_clinics.template.sql`.
+
+Required evidence before marking this track passed:
+
+- both identities resolve to their own clinic;
+- each identity reads its own fixture rows;
+- neither identity reads the other clinic's patients, legacy records,
+  appointments, clinical visits, treatment plans, finance rows, audit events,
+  leads, or staff profiles;
+- the SQL transaction is rolled back, or the disposable project is destroyed;
+- the Auth users and all fixture rows are removed after the run.
+
+Do not turn the template into an automatic provisioning script. It is
+deliberately reviewable and placeholder-based because Auth user creation and
+service-role access are high-impact operations.
+
+## Evidence and release decision
+
+Attach the following to the release record without attaching secrets:
+
+- staging project ref and target origin (not keys);
+- fixture prefix, operator, timestamp, and cleanup confirmation;
+- Playwright command and summary (`3 passed` for Track A);
+- SQL test output and rollback/cleanup evidence for Track B;
+- browser version and commit SHA.
+
+Authenticated tests validate UI role routing and session separation. They do
+not replace the Supabase SQL/RLS suites, migration checks, backup/restore
+drill, SMTP validation, or legal review. The release remains blocked for real
+patient or financial data until those independent gates are complete.
