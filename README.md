@@ -1,5 +1,7 @@
 # DentalFlow — Dental Spa MVP
 
+For a new-machine continuation, start with [the 2026-10-22 handoff](docs/HANDOFF_2026-10-22.md) and [local development guide](docs/LOCAL_DEVELOPMENT.md).
+
 Interface française, mobile-first, pour les flux quotidiens d’un cabinet dentaire. La version déployée utilise Supabase Auth et PostgreSQL avec des politiques RLS par cabinet. Un mode localStorage reste disponible pour le développement hors ligne.
 
 ## Modules inclus

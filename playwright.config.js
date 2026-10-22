@@ -22,7 +22,7 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL ? undefined : {
     command: 'pnpm dev --host 127.0.0.1 --port 4173',
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env.CI && !process.env.E2E_REQUIRE_FRESH_SERVER,
     timeout: 120_000,
     env: {
       ...process.env,

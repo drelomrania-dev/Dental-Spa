@@ -2,13 +2,16 @@ import { test as base, expect } from '@playwright/test'
 
 export const e2eConfig = {
   admin: { email: process.env.E2E_ADMIN_EMAIL || '', password: process.env.E2E_ADMIN_PASSWORD || '' },
-  assistant: { email: process.env.E2E_ASSISTANT_EMAIL || '', password: process.env.E2E_ASSISTANT_PASSWORD || '' }
+  assistant: { email: process.env.E2E_ASSISTANT_EMAIL || '', password: process.env.E2E_ASSISTANT_PASSWORD || '' },
+  otherAdmin: { email: process.env.E2E_OTHER_ADMIN_EMAIL || '', password: process.env.E2E_OTHER_ADMIN_PASSWORD || '' }
 }
 
 export const hasAuthenticatedTarget = Boolean(process.env.E2E_BASE_URL || (process.env.E2E_SUPABASE_URL && process.env.E2E_SUPABASE_ANON_KEY))
 export const missingAuthenticatedTargetReason = 'Skipped: set E2E_BASE_URL for a deployed test target, or set E2E_SUPABASE_URL and E2E_SUPABASE_ANON_KEY for the local Supabase target.'
 export const hasTwoAccountConfig = Boolean(hasAuthenticatedTarget && e2eConfig.admin.email && e2eConfig.admin.password && e2eConfig.assistant.email && e2eConfig.assistant.password)
 export const missingTwoAccountConfigReason = 'Skipped: configure an authenticated target, then define E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD, E2E_ASSISTANT_EMAIL, and E2E_ASSISTANT_PASSWORD.'
+export const hasTwoClinicConfig = Boolean(hasTwoAccountConfig && e2eConfig.otherAdmin.email && e2eConfig.otherAdmin.password)
+export const missingTwoClinicConfigReason = 'Skipped: configure E2E_OTHER_ADMIN_EMAIL and E2E_OTHER_ADMIN_PASSWORD for the second clinic.'
 
 async function signIn(page, credentials) {
   await page.goto('/')
@@ -28,6 +31,10 @@ export const test = base.extend({
   assistantPage: async ({ browser }, use) => {
     const context = await browser.newContext(); const page = await context.newPage()
     await signIn(page, e2eConfig.assistant); await use(page); await context.close()
+  },
+  otherAdminPage: async ({ browser }, use) => {
+    const context = await browser.newContext(); const page = await context.newPage()
+    await signIn(page, e2eConfig.otherAdmin); await use(page); await context.close()
   }
 })
 

@@ -32,5 +32,6 @@ export async function updateAppointment(id,payload){
 }
 
 export async function loadPublicBookingManagement(token){requireRemote();return unwrap(await supabase.rpc('public_booking_manage',{p_token:token}))}
+export async function loadPublicRescheduleSlots(token,date){requireRemote();return unwrap(await supabase.rpc('public_booking_reschedule_slots',{p_token:token,p_date:date}))}
 export async function reschedulePublicBooking(token,date,time){requireRemote();return unwrap(await supabase.rpc('public_reschedule_booking',{p_token:token,p_date:date,p_time:time}))}
 export async function cancelPublicBooking(token,reason){requireRemote();return unwrap(await supabase.rpc('public_cancel_booking',{p_token:token,p_reason:reason||null}))}

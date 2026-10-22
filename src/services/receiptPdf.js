@@ -8,31 +8,37 @@ function cleanText(value,max=64){
   return latin.length>max?`${latin.slice(0,Math.max(0,max-3))}...`:latin
 }
 function pdfString(value,max){return `(${cleanText(value,max).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')})`}
-function money(value){return `${Number(value||0).toFixed(2).replace('.',',')} MAD`}
+function money(value,currency='MAD'){return `${Number(value||0).toFixed(2).replace('.',',')} ${currency}`}
 function dateLabel(value){
   const parts=String(value||'').slice(0,10).split('-')
   return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:cleanText(value||'')
 }
 
 export function buildPaymentReceiptPdfBytes({receipt,patientName,treatmentName,clinic={}}){
+  const document=receipt?.document||{}
+  const issuedClinic=receipt?.document?(document.clinic||{}):clinic
+  const currency=issuedClinic.currency||'MAD'
   const isCorrection=receipt?.kind==='refund'||Number(receipt?.paid||0)<0
-  const title=isCorrection?'Avoir de paiement':'Reçu de paiement'
+  const title=isCorrection?'Document de correction':'Reçu de paiement'
   const rows=[
-    ['Patient',patientName||'Patient'],['Soin',treatmentName||'Soin'],['Montant reçu',money(Math.abs(Number(receipt?.paid||0)))],
-    ['Mode de paiement',receipt?.method||'Non précisé'],['Solde après opération',money(receipt?.remaining||0)]
+    ['Patient',receipt?.document?(document.patientName||'Nom historique indisponible'):(patientName||'Patient')],
+    ['Soin',receipt?.document?(document.treatmentName||'Soin historique indisponible'):(treatmentName||'Soin')],
+    [isCorrection?'Montant corrigé':'Montant reçu',money(document.amount??Math.abs(Number(receipt?.paid||0)),currency)],
+    ['Mode de paiement',document.method||receipt?.method||'Non précisé'],['Solde après opération',money(document.remaining??receipt?.remaining??0,currency)]
   ]
   const text=(x,y,size,font,value,color='0.15 0.17 0.22')=>`${color} rg BT /${font} ${size} Tf 1 0 0 1 ${x} ${y} Tm ${pdfString(value)} Tj ET\n`
   let content='q\n0.459 0.341 0.961 rg\n0 720 595.28 121.89 re f\nQ\n'
-  content+=text(62,780,21,'F2',cleanText(clinic?.name||'Dental Spa',34),'1 1 1')
+  content+=text(62,780,21,'F2',cleanText(issuedClinic.name||'Identité historique indisponible',34),'1 1 1')
   content+=text(62,756,10,'F1',title,'1 1 1')
   content+=text(62,670,16,'F2',isCorrection?'Correction enregistrée':'Paiement enregistré')
-  content+=text(62,646,9,'F1',`Référence ${receipt?.reference||'—'}  |  ${dateLabel(receipt?.date)}`,'0.45 0.49 0.57')
+  content+=text(62,646,9,'F1',`Référence ${document.number||receipt?.reference||'—'}  |  ${dateLabel(document.issuedAt||receipt?.date)}`,'0.45 0.49 0.57')
+  if(isCorrection)content+=text(62,624,9,'F1',`Paiement d'origine ${document.originalReceiptNumber||receipt?.reversesTransactionId||'—'}`,'0.45 0.49 0.57')
   content+='q\n0.969 0.961 1 rg\n50 410 495 190 re f\nQ\n'
   let y=566
   rows.forEach(([label,value])=>{content+=text(68,y,9,'F1',label,'0.45 0.49 0.57');content+=text(345,y,9,'F2',value);y-=34})
   content+='0.89 0.88 0.96 RG 0.7 w 50 94 m 545 94 l S\n'
   content+=text(50,68,8,'F1','Document de paiement - ne remplace pas une facture fiscale.','0.45 0.49 0.57')
-  content+=text(50,50,8,'F1',`${clinic?.name||'Dental Spa'} - ${clinic?.address||'Casablanca'} - ${clinic?.timezone||'Africa/Casablanca'}`,'0.45 0.49 0.57')
+  content+=text(50,50,8,'F1',`${issuedClinic.name||'Identité historique indisponible'} - ${issuedClinic.address||''} - ${issuedClinic.phone||''} - ${issuedClinic.timezone||''}`,'0.45 0.49 0.57')
 
   const objects=[null,
     '<< /Type /Catalog /Pages 2 0 R >>',
@@ -54,6 +60,7 @@ export function buildPaymentReceiptPdfBytes({receipt,patientName,treatmentName,c
 export function downloadPaymentReceiptPdf(details){
   const bytes=buildPaymentReceiptPdfBytes(details)
   const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}))
-  const anchor=document.createElement('a');anchor.href=url;anchor.download=`recu-${cleanText(details.receipt?.reference||'paiement',40).replace(/[^a-zA-Z0-9_-]+/g,'-')}.pdf`;anchor.click()
+  const kind=details.receipt?.kind==='refund'?'correction':'recu'
+  const anchor=document.createElement('a');anchor.href=url;anchor.download=`${kind}-${cleanText(details.receipt?.reference||'paiement',40).replace(/[^a-zA-Z0-9_-]+/g,'-')}.pdf`;anchor.click()
   window.setTimeout(()=>URL.revokeObjectURL(url),1000)
 }

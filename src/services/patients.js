@@ -8,4 +8,5 @@ export async function createPatient(payload){requireRemote();return unwrap(await
 export async function updatePatient(id,payload){requireRemote();return unwrap(await supabase.rpc('update_patient_record',{p_app_id:id,p_payload:payload}))}
 export async function deletePatient(id){requireRemote();return unwrap(await supabase.rpc('delete_patient_record',{p_app_id:id}))}
 export async function loadPatientMedical(id){requireRemote();return unwrap(await supabase.rpc('patient_medical_snapshot',{p_app_id:id}))}
+export async function loadPatientTimeline(id){requireRemote();return unwrap(await supabase.rpc('patient_timeline_snapshot',{p_app_id:id}))}
 export async function updatePatientMedical(id,medicalAlerts,emergencyContact={}){requireRemote();return unwrap(await supabase.rpc('update_patient_medical_record',{p_app_id:id,p_medical_alerts:medicalAlerts||null,p_emergency_contact:emergencyContact}))}

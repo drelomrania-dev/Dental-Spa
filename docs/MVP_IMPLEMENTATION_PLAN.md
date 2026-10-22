@@ -1,36 +1,52 @@
-# Dental Spa MVP — Implementation plan
+# Dental Spa OS — MVP implementation and acceptance plan
 
-## Current architecture
+Updated: 2026-10-21 (Africa/Casablanca)
 
-- React 19 + Vite single-page application.
-- Supabase Auth, Postgres, RLS, Storage and Edge Functions in production.
-- `patients`, Acquisition, Appointments, Finance and Clinical workflows use normalized tables; configuration catalogues retain permission-guarded, tenant-scoped compatibility records while their final migrations are completed.
-- Vercel deploys `main` from `drelomrania-dev/Dental-Spa`.
+## Architecture and acceptance boundary
 
-## Delivery sequence
+The app is React 19/Vite. The intended clinic backend is Supabase Auth, Postgres with RLS, private Storage and Edge Functions. Local demo mode uses browser storage for synthetic UI exercises; it is not a security or persistence acceptance environment. The repository contains migrations through `036_reporting_phase8.sql` and Phase 1–9 implementation. See `HANDOFF_2026-10-22.md` for the laptop continuation context.
 
-| Phase | Scope | State | Acceptance checkpoint |
-|---|---|---|---|
-| 0 | Audit, deployment, mobile shell | Complete | Build and Vercel production verified |
-| 1 | Auth, permissions, clinic settings, staff, patients, services | In progress | Patient isolation and secure manual-link staff invitation pass; two-account browser E2E remains |
-| 2 | Internal calendar and public booking | Complete | Normalized agenda, configurable chair/room availability, contact throttling, secure public management and Acquisition linkage pass transactional suites |
-| 3 | Visits, treatment plans, quotations | Complete | Transactional visit → plan → negotiated approval → finance-price suite passes |
-| 4 | Approvals, payments, balances, receipts, corrections | Complete for MVP | Transactional ledger, balances, receipt snapshots, linked corrections and downloadable PDF pass; legal wording remains external validation |
-| 5 | Collection sessions and role dashboards | Complete for administrator | Normalized session open/submit/validate, cash reconciliation, filtered financial reporting and audited export pass; two-account assistant E2E remains |
-| 6 | End-to-end, security, recovery and acceptance | In progress | Mandatory journey and permission suite passes |
-| P0 Acquisition | Leads, intake, guided media, quotes, conversion | Complete | Transactional SQL test and mobile UI checks pass |
+The 19 work areas below are the current implementation inventory. “Implemented” means code and demo/static checks exist. It does not mean the fresh local Supabase stack, multi-account permissions or production operation has passed.
 
-## Dependency map
+| # | Work area | Delivery phase | Current checkpoint |
+| --- | --- | --- | --- |
+| 1 | Local Auth and development platform | 1 | Implemented; runtime pending |
+| 2 | Tenant isolation and role permissions | 1–2 | Implemented; two-clinic runtime pending |
+| 3 | Clinic identity and settings | 2 | Implemented; runtime pending |
+| 4 | Staff invitations, roles and audit | 1–2 | Implemented; Auth/Edge runtime pending |
+| 5 | Practitioners, services, resources and booking links | 2 | Implemented; catalogue runtime pending |
+| 6 | Lead pipeline, follow-ups and interactions | 3 | Implemented; CRM/RLS runtime pending |
+| 7 | Public intake, consent and private guided media | 3 | Implemented; Storage/Edge runtime pending |
+| 8 | Prospect quotes and patient conversion | 3 | Implemented; transactional runtime pending |
+| 9 | Public booking and secure management links | 4 | Implemented; token and race runtime pending |
+| 10 | Internal agenda and appointment transitions | 4 | Implemented; transactional runtime pending |
+| 11 | Patient identity, timeline and medical access separation | 5 | Implemented; Auth/RLS runtime pending |
+| 12 | Clinical visits and note revisions | 5 | Implemented; clinical runtime pending |
+| 13 | Treatment plans and negotiated price decisions | 5 | Implemented; price/finance runtime pending |
+| 14 | Finance accounts and dated installments | 6 | Implemented; ledger runtime pending |
+| 15 | Payments, corrections and operational receipts | 6 | Implemented; ledger/runtime and legal review pending |
+| 16 | Cash collection sessions | 6 | Implemented; multi-collector runtime pending |
+| 17 | Consent, templates and reminders | 7 | Fake sender/demo implemented; runtime and real provider work pending |
+| 18 | Role dashboards, reporting and audited exports | 8 | Implemented; report/Auth runtime pending |
+| 19 | Integrated phone/desktop and keyboard UX | 9 | Demo/browser pass; local integrated acceptance pending |
 
-`Auth + clinic membership → permissions → patients/services/resources → appointments → clinical plans → approvals → payments → collection closing → reporting`.
+## Delivery checkpoints
 
-## Main risks
+| Phase | Work | Evidence | Next gate |
+| --- | --- | --- | --- |
+| 1 | Local stack, fixtures and baseline | Build, demo checks and static SQL structure | Fresh local migration, Auth/Storage/Edge verification |
+| 2 | Clinic setup, staff and catalogue | Build, demo UI and SQL syntax | Local catalogue, invitation and role checks |
+| 3 | CRM, intake, media and quotes | Demo journeys, SQL and Edge syntax | Local RLS, Storage, token and Edge tests |
+| 4 | Booking and agenda | Phone demo, SQL syntax | Local conflict, management token and two-client race |
+| 5 | Patient and clinical | Demo journey, SQL syntax | Local assignment, medical privacy and price-to-finance |
+| 6 | Finance and cash | Demo journey, PDF check, SQL syntax | Local ledger, receipts and collector separation |
+| 7 | Reminders | Demo fake-delivery journey, SQL syntax | Local consent/outbox invalidation and roles |
+| 8 | Reporting | Demo exports and SQL syntax | Local aggregate/export RPC and audit checks |
+| 9 | Integrated UX | 20 browser passes, build and cross-module demo | Phase 10 local acceptance |
+| 10 | Local acceptance and final audit | Static/script review and demo checks passed; WSL platform installation requires restart | After the Windows restart and working Docker Linux engine, run all local migrations, SQL/Auth/Storage/Edge/browser suites with synthetic clinics |
 
-- Staff onboarding no longer depends on SMTP; optional automated confirmation and notification emails still require a production SMTP provider.
-- Contact-level booking throttling is enforced in Postgres; optional IP-level edge/WAF throttling would add protection for repeated invalid requests.
-- Staff invitation is implemented with administrator-generated access links and still needs a second real Auth account for browser verification.
-- Moroccan invoice and retention requirements require clinic/legal validation.
+The Phase 9 evidence and exact pending checklist are in `PHASE_9_STATUS.md`. The Phase 10 blocker and checks actually run are in `PHASE_10_STATUS.md`; current test accounting is in `MVP_TEST_REPORT.md`.
 
-## Definition of complete
+## Completion rule
 
-A module is complete only when schema, RLS, server validation, UI, persistence, cross-module links, error handling and tests are all verified. A rendered screen alone is not considered complete.
+A module is accepted only after its schema, server validation, RLS, UI, persistence, cross-module behavior, error handling and relevant tests pass on the intended local Supabase runtime. A demo screen, SQL parse or build alone cannot satisfy that rule. Release for real patients additionally needs backup/restore, operational and clinic/legal reviews. The app is not a complete EHR or production-ready clinic system.

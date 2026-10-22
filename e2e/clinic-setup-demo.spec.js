@@ -1,0 +1,52 @@
+import { test, expect } from '@playwright/test'
+
+test('configures an empty demo clinic and hides an inactive booking service', async ({ page }) => {
+  await page.goto('/settings')
+  await page.evaluate(() => {
+    for (const name of ['doctors','treatments','resources','bookingLinks']) localStorage.setItem(`dentalflow:${name}`,'[]')
+    localStorage.setItem('dentalflow:clinic',JSON.stringify({name:'Dental Spa',phone:'',address:'Casablanca',currency:'MAD',timezone:'Africa/Casablanca'}))
+  })
+  await page.reload()
+  await expect(page.getByRole('heading',{name:'Premiers réglages'})).toBeVisible()
+  await page.getByLabel('Nom du cabinet').fill('Cabinet Démo QA')
+  await page.getByLabel('Téléphone').fill('+212 600000000')
+  await page.getByLabel('Ville / adresse').fill('12 Rue Test')
+  await page.getByLabel('Devise').fill('EUR')
+  await page.getByRole('button',{name:'Enregistrer'}).click()
+  await expect(page.getByText('Paramètres enregistrés.')).toBeVisible()
+
+  await page.goto('/doctors')
+  await expect(page.getByText('Aucun praticien.')).toBeVisible()
+  await page.getByRole('button',{name:'Ajouter un praticien'}).click()
+  await page.getByLabel('Nom',{exact:true}).fill('Dr Test')
+  await page.getByRole('button',{name:'Enregistrer'}).click()
+  await expect(page.getByRole('heading',{name:'Dr Test'})).toBeVisible()
+
+  await page.goto('/treatments')
+  await page.getByRole('button',{name:'Nouveau soin'}).click()
+  await page.getByLabel('Nom du soin').fill('Consultation QA')
+  await page.getByLabel('Prix (EUR)').fill('175')
+  await page.getByRole('button',{name:'Enregistrer'}).click()
+
+  await page.goto('/settings')
+  await page.getByPlaceholder('Nom de la ressource').fill('Fauteuil QA')
+  await page.getByRole('button',{name:'Ajouter'}).click()
+  await page.getByPlaceholder('consultation').fill('qa-booking')
+  await page.getByLabel('Titre').fill('Réservation QA')
+  const linksPanel=page.locator('.panel').filter({has:page.getByRole('heading',{name:'Liens de réservation'})})
+  await linksPanel.locator('select').nth(0).selectOption({label:'Consultation QA'})
+  await linksPanel.locator('select').nth(2).selectOption({label:'Fauteuil QA'})
+  await page.getByRole('button',{name:'Créer le lien'}).click()
+  await expect(page.getByText('/book/qa-booking')).toBeVisible()
+
+  await page.goto('/book/qa-booking')
+  await expect(page.getByText('Cabinet Démo QA')).toBeVisible()
+  await expect(page.getByText('12 Rue Test')).toBeVisible()
+  await expect(page.getByText('+212 600000000')).toBeVisible()
+  await expect(page.getByText('175 EUR')).toBeVisible()
+
+  await page.goto('/treatments')
+  await page.getByLabel('Réservable en ligne').uncheck()
+  await page.goto('/book/qa-booking')
+  await expect(page.getByText('Aucun service réservable.')).toBeVisible()
+})

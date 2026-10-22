@@ -8,6 +8,7 @@ export const permissionCatalog=[
   ['Paiements',['payments.collect','payments.receipt','payments.view.own','payments.view.all','payments.correct']],
   ['Caisse & rapports',['sessions.own','sessions.manage','reports.finance','reports.export']],
   ['Acquisition',['acquisition.view','acquisition.manage']],
+  ['Rappels',['reminders.manage']],
   ['Administration',['settings.manage','staff.manage','permissions.manage','audit.view']]
 ]
 

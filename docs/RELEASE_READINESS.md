@@ -1,6 +1,8 @@
 # Dental Spa OS — Release readiness
 
-Updated: 2026-10-18
+Updated: 2026-10-21 (Africa/Casablanca)
+
+Current gate: **not cleared for real patient or financial data**. The Phase 1–9 shared checkout has 20 passing public/demo browser checks, but local Supabase runtime acceptance remains blocked. Docker Desktop reported `WslVirtualMachinePlatformNotEnabled`; `wsl --install --no-distribution` succeeded and requires a Windows restart before the Linux engine can be checked again. See `PHASE_10_STATUS.md` for actual checks and prerequisites.
 
 ## Verified in the repository
 
@@ -8,13 +10,15 @@ Updated: 2026-10-18
 - The production bundle is route-split and the optional Firebase integration is lazy-loaded.
 - `pnpm-workspace.yaml` explicitly allows the dependency build scripts required by the project.
 - Role-aware routes use the permission context for assistant and practitioner access, with administrator fallback.
-- Supabase schema, migrations and transactional SQL suites are versioned under `supabase/`.
-- The working tree has no uncommitted user changes outside the current audit edits.
+- Supabase schema, migrations through 036 and transactional SQL suites are versioned under `supabase/`. The Phase 1–9 implementation is in the repository; local runtime acceptance remains pending.
+- Phase 10 build and 20 public/demo browser checks pass; 11 local/Auth/backend checks are skipped until the local stack runs. SQL parsing has not executed migrations, PL/pgSQL or RLS.
 
-## Verified in the connected Supabase project
+## Historical connected-project evidence (2026-10-18)
+
+These observations were recorded before migrations 029–036 and do not verify the current checkout or current production state:
 
 - The `dental Spa OS` project is connected and the production `main` branch is present.
-- Supabase Advisor currently reports no security or performance issues.
+- Supabase Advisor reported no security or performance issues at that time.
 - Email authentication is enabled.
 - Leaked-password protection is disabled because the project is on the Free plan and the feature requires Pro or above.
 - Scheduled project backups are unavailable on the Free plan.
@@ -22,12 +26,12 @@ Updated: 2026-10-18
 
 ## Required before real patient use
 
-1. Complete browser E2E with a real invited assistant or practitioner account.
-2. Run the full operational journey with two staff accounts and cash-session isolation.
-3. Decide whether to upgrade Supabase or establish an external backup and restore procedure.
-4. Configure production SMTP if automated confirmation or notification emails are required.
-5. Complete clinic/legal review of Moroccan receipt wording, numbering and retention.
-6. Run the simultaneous public-booking load test and optional edge/WAF abuse test.
+1. Complete Phase 10 fresh local migrations 001–036, all 21 SQL suites, Auth/RLS/Storage/Edge checks, guarded browser tests and the synthetic two-clinic journey after WSL2/Docker is available.
+2. Separately verify the intended remote release target, including invited staff accounts, cash-session isolation and booking concurrency, before any production migration or deployment decision.
+3. Decide whether to upgrade Supabase or establish a tested external backup and restore procedure.
+4. Build and approve a trusted reminder provider worker, sender identities, consent evidence, templates, delivery policy and retention before any real email or WhatsApp delivery. The current sender is fake.
+5. Complete clinic/legal review of Moroccan receipt wording, tax identifiers, numbering, clinical and financial retention, and operating procedures.
+6. Configure production SMTP, monitoring, domain and recovery procedures as required for approved operation.
 
 ## Migration 028 application checklist
 
@@ -50,7 +54,7 @@ having nullif(lower(trim(data->>'slug')), '') is null
 4. Verify one assigned practitioner can complete a clinical visit while an unassigned practitioner is denied, and verify public booking still resolves its published slug.
 5. Record the migration result and recovery evidence in the release log before enabling real patient traffic.
 
-The repository release can be built and deployed without applying this migration, but production database hardening is not complete until this checklist has passed. The connected production project has now passed the slug preflight and migration application steps; staging regression execution remains recommended before broader rollout.
+The 2026-10-18 connected project passed the slug preflight and migration 028 application steps. This is historical evidence; staging and remote regression execution for the current checkout remain pending.
 
 ## Automated release gate
 
@@ -70,4 +74,4 @@ Release checks for this flow must cover anonymous `401`, non-administrator `403`
 
 ## Release conclusion
 
-The MVP is technically deployable and the core booking, acquisition, clinical and finance workflows are implemented. It is not yet operationally cleared for real patient or financial data until the second-account E2E, recovery strategy and clinic/legal checks are complete.
+The core workflows are implemented in code, but the current checkout is not locally runtime accepted or remotely verified. Production deployment, real reminder delivery and use with real patient or financial data remain inactive pending the gates above.

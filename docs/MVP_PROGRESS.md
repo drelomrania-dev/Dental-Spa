@@ -1,36 +1,31 @@
-# Dental Spa MVP — Progress
+# Dental Spa OS — MVP progress
 
-## Booking
+Updated: 2026-10-21 (Africa/Casablanca)
 
-**Implemented:** Calendly-style mobile-first journey with one decision per screen, selectable booking-eligible services, a required patient-written visit reason, service-specific durations and live slots, normalized internal agenda, transactional practitioner and chair/room conflict checks, configurable active resources, shareable booking links with resource assignment, patient/lead deduplication, contact-level abuse limits, secure management links, public rescheduling/cancellation, references and responsive layouts. Every public booking keeps the selected service and reason in both the patient agenda and the Acquisition `Rendez-vous` stage with an auditable history.
-**Verified:** Appointment, resource/rate-limit, service/reason and booking-to-Acquisition SQL suites, rollback cleanup, complete seven-step flow at 390×844 without horizontal overflow, desktop UI, invalid-token management UI and production build.
-**Remaining:** Optional IP-level edge/WAF throttling for failed requests and a simultaneous two-client HTTP load test.
-**Risks / blockers:** None for the core booking-to-agenda-to-pipeline journey.
+## Current status
 
-## Acquisition & conversion
+Phases 1–9 have implementation in the repository. The 390px/desktop demo browser audit and a single synthetic journey across the major modules pass. Phase 10's static/script review and repeat build/demo checks pass, but the fresh local Supabase stack has **not** been accepted. Docker Desktop reported `WslVirtualMachinePlatformNotEnabled`; `wsl --install --no-distribution` succeeded and requires a Windows restart before Docker's Linux engine can be checked again. Migrations 001–036, transactional SQL, real Auth/RLS roles, private Storage, Edge Functions and authenticated browser journeys still need runtime execution. The historical 2026-10-10 hosted smoke results do not validate the new migrations. See `HANDOFF_2026-10-22.md` for laptop continuation.
 
-**Implemented:** Pipeline, lead profile, interactions, follow-ups, token invitations, four-step intake, private guided photos, consent evidence, quotes and conversion to patient.  
-**Verified:** Transactional SQL suite, negative Edge Function token test, mobile UI, RLS/grant review.  
-**Remaining:** Optional outbound WhatsApp/email providers and advanced attribution dashboards.  
-**Risks / blockers:** External messaging intentionally remains manual.
+| Phase | Delivered code and demo scope | Acceptance state |
+| --- | --- | --- |
+| 1 | Local stack scripts, fixtures, baseline migration, Auth target guards | Code/static pass; local runtime pending |
+| 2 | Clinic setup, staff link/roles, practitioners, services and resources | Demo/static pass; local runtime pending |
+| 3 | CRM pipeline, follow-ups, intake, private media and prospect quotes | Demo/static pass; SQL/Storage/Edge pending |
+| 4 | Public booking, management tokens, agenda and collision logic | Demo/static pass; SQL/token/concurrent HTTP pending |
+| 5 | Patient timeline/privacy, clinical visits/plans and negotiated prices | Demo/static pass; Auth/RLS/transaction pending |
+| 6 | Accounts/installments, ledger, receipts/corrections and cash sessions | Demo/static pass; ledger/multi-collector pending |
+| 7 | Consent, templates, outbox and fake reminders | Demo/static pass; SQL/roles pending; no real sender |
+| 8 | Role dashboards, normalized reports and audited export RPCs | Demo/static pass; report/export RPC runtime pending |
+| 9 | Integrated viewport/keyboard/error UX and synthetic journey | 20 Playwright demo/public passes; local integration pending |
+| 10 | Static acceptance review, local scripts and two-client race fixture correction | Build and 20 demo/public browser passes; Windows restart required before Docker/WSL2 runtime acceptance |
 
-## Existing clinic modules
+## Phase 9 integration findings
 
-**Implemented:** Patients, appointments, practitioners, services, receivables, reports and settings persist through Supabase. Patient identity and medical records now have separate RPC-only access boundaries, with assignment-scoped clinical access and no direct browser table grants. Finance uses a normalized append-only ledger with server-calculated balances, idempotent collection, immutable receipt snapshots, linked correction entries and normalized cash sessions. Clinical visits, treatment plans and negotiated-price approvals use normalized transactional commands; finance consumes approved prices. Legacy `app_records` operations have backend permission guards.
-**Verified:** Patient privacy plus all prior access-control, acquisition, finance, clinical and appointment transactional suites pass and roll back; zero QA rows remain. Anonymous users have no patient, finance or clinical table access.
-**Implemented:** Administrators can generate a one-time staff access link without outbound email. The invited Auth identity is bound transactionally to the clinic and selected assistant/practitioner role; practitioners are linked to the clinical directory. Free administrator registration closes automatically after the first bootstrap.
-**Remaining:** Finish two-real-account browser E2E and obtain clinic/legal validation of receipt wording.
-**Risks / blockers:** Finance integrity is enforced at the database command layer, but Moroccan invoice wording/numbering and retention still require clinic/legal validation.
+- Phone report tables now scroll inside their cards instead of widening the page. Labels were added to prospect/patient/payment search, payment method and resource setup controls. The nonfunctional header search and notification affordances were removed.
+- Dialogs now focus a field, trap Tab, close on Escape and restore focus. CRM modal save failures are visible inside the dialog so entered values can be corrected and retried. A synthetic storage failure and retry passed.
+- Demo public booking now links a matched or newly created CRM lead and the appointment; a post-booking CRM sync failure is shown with the saved booking reference. The Supabase booking command already has its own transactional CRM link and was not changed in Phase 9.
+- One phone browser journey passed lead/follow-up → public booking → appointment/patient → clinical visit/plan → price approval → partial cash payment/installment → cash session → report → reminder consent/queue check. Browser demo mode does not establish database or security acceptance.
 
-## Financial reporting
+## Remaining before real clinic operation
 
-**Implemented:** Date presets and custom ranges, gross collections, corrections, net collections, average payment, current receivables, breakdowns by service/payment method/day/collector, cash-session reconciliation and semicolon-delimited UTF-8 CSV export. Aggregate viewing and detailed export use separate server permissions; every detailed export is written to the audit log. Labels explicitly avoid presenting collections as accounting revenue or profit.
-**Verified:** `supabase/tests/financial_reporting.sql` covers aggregate totals, detailed rows, export audit and unauthorized-role denial with complete rollback. The production build passes.
-**Remaining:** Clinic-specific accounting exports and legally reviewed invoice reporting remain outside the operational collection report.
-
-## Deployment
-
-**Implemented:** GitHub `main` auto-deploy, mobile shell, production Supabase default using a browser-safe publishable key.  
-**Verified:** Production root requires Supabase authentication and `/book/consultation` loads live remote availability.  
-**Remaining:** Configure custom domain, production SMTP for optional automated messages, backups and monitoring. The connected Supabase project is currently on the Free plan, which does not include scheduled project backups.
-**Risks / blockers:** Supabase leaked-password protection is unavailable on the current Free plan, and a backup/restore strategy must be established before real patient data is loaded.
+Run `docs/LOCAL_DEVELOPMENT.md` and the Phase 10 checklist with synthetic clinics. Resolve any migration, SQL, Auth, Storage, Edge, role or browser failures found there. A trusted provider worker and clinic-approved consent/template/retention policy are needed for real reminders; the current fake sender never sends. Backup/restore, monitoring, operational receipt/invoice wording, tax/numbering, retention and clinic workflow decisions still need review. The application is not a complete EHR and is not production-ready for real patient or financial data.

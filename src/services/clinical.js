@@ -13,6 +13,7 @@ export async function loadClinicalSnapshot(){
     return {
       visits:Array.isArray(data?.visits)?data.visits:[],
       treatmentPlans:Array.isArray(data?.plans)?data.plans:[],
+      priceTargets:Array.isArray(data?.priceTargets)?data.priceTargets:[],
       priceRequests:Array.isArray(data?.priceRequests)?data.priceRequests:[]
     }
   }).catch(error=>{snapshotPromise=null;throw error})
@@ -27,8 +28,23 @@ export async function recordClinicalVisit(payload){
     p_notes:payload.notes,
     p_follow_up:payload.followUp||null,
     p_service_app_id:payload.treatmentId||null,
-    p_create_plan:Boolean(payload.createPlan)
+    p_create_plan:Boolean(payload.createPlan),
+    p_appointment_app_id:payload.appointmentId||null
   }))
+  invalidateClinicalSnapshot()
+  return data
+}
+
+export async function updateClinicalVisit(id,notes,followUp){
+  requireRemote()
+  const data=unwrap(await supabase.rpc('update_clinical_visit',{p_visit_app_id:id,p_notes:notes,p_follow_up:followUp||null}))
+  invalidateClinicalSnapshot()
+  return data
+}
+
+export async function updateTreatmentPlanStatus(id,status){
+  requireRemote()
+  const data=unwrap(await supabase.rpc('update_treatment_plan_status',{p_plan_app_id:id,p_status:status}))
   invalidateClinicalSnapshot()
   return data
 }

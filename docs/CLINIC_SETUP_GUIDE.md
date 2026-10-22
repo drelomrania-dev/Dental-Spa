@@ -1,5 +1,16 @@
 # Dental Spa — Clinic setup guide
 
+## New clinic on the local stack
+
+1. Sign in as the first administrator. The dashboard links to **Paramètres → Premiers réglages** until setup is ready.
+2. Save a real clinic name, address, phone, three-letter currency and IANA timezone. These values feed the public booking identity and receipt PDF; the booking calendar uses the configured timezone for today's date.
+3. Add an active practitioner in **Praticiens**, choose working days and start/end times, then add an active and booking-eligible service in **Soins & tarifs** with its price and duration.
+4. Check the active chair or room in **Paramètres**, then create and publish a booking link tied to the service and resource. Open the public link and verify the identity, price and available slots before sharing it.
+5. Generate each assistant or practitioner access link in **Personnel et invitations**. Send it to the intended person through an approved channel. After claim, review the member's role and active status. A practitioner claim links the Auth identity to the clinical directory.
+6. Review **Rôles et permissions** and **Journal d’audit** as an administrator. Test direct route and server denials with the local SQL and authenticated browser suites.
+
+Run the local acceptance commands in [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) before using real data. The browser demo mode is useful for previewing setup but does not verify Auth or RLS.
+
 1. Open the production URL and sign in with the confirmed administrator account.
 2. In **Paramètres**, verify clinic name, address, phone, currency `MAD` and timezone `Africa/Casablanca`.
 3. Add practitioners and services with their real prices and durations.

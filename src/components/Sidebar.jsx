@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, CircleDollarSign, ClipboardList, CreditCard, FileHeart, LayoutDashboard, ReceiptText, Settings, Stethoscope, Users, WalletCards, BadgeCheck, Calculator, X, Megaphone } from 'lucide-react'
+import { CalendarDays, CircleDollarSign, ClipboardList, CreditCard, FileHeart, LayoutDashboard, ReceiptText, Settings, Stethoscope, Users, WalletCards, BadgeCheck, Calculator, X, Megaphone, Bell } from 'lucide-react'
 import { useData } from '../DataContext'
 import { firebaseEnabled } from '../services/firebase'
 import { supabaseEnabled } from '../services/supabase'
@@ -13,6 +13,7 @@ const nav = [
   ['/payment-history', 'Historique paiements', ReceiptText],
   ['/receivables', 'Soldes à recevoir', WalletCards],
   ['/appointments', 'Rendez-vous', CalendarDays],
+  ['/reminders', 'Rappels', Bell],
   ['/doctors', 'Praticiens', Stethoscope],
   ['/treatments', 'Soins & tarifs', ClipboardList],
   ['/clinical', 'Clinique', FileHeart],
@@ -30,13 +31,14 @@ export default function Sidebar({open=false,onClose=()=>{},onNavigate=()=>{}}){
     if(to==='/patients') return can('patients.basic.view')
     if(to==='/payments') return can('payments.collect')
     if(to==='/appointments') return can('appointments.view')
-    if(['/doctors','/treatments'].includes(to)) return can('services.view')
+    if(to==='/reminders') return can('reminders.manage')
+    if(['/doctors','/treatments'].includes(to)) return can('services.view') || can('services.manage') || can('settings.manage')
     if(['/clinical'].includes(to)) return can('clinical.view')
     if(['/approvals'].includes(to)) return can('priceRequests.create') || can('priceRequests.approve') || currentUser?.role === 'administrator'
     if(to==='/reports') return can('reports.finance') || currentUser?.role === 'administrator'
     if(['/receivables','/payment-history'].includes(to)) return can('payments.view.all') || currentUser?.role === 'administrator'
     if(to==='/collection-sessions') return can('sessions.own') || can('sessions.manage')
-    if(to==='/settings') return can('settings.manage') || currentUser?.role === 'administrator'
+    if(to==='/settings') return can('settings.manage') || can('staff.manage') || can('permissions.manage') || can('audit.view') || currentUser?.role === 'administrator'
     return true
   }).map(([to])=>to))
   return (

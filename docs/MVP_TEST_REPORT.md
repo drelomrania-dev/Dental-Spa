@@ -1,46 +1,38 @@
-# Dental Spa MVP — Test report
+# Dental Spa OS — MVP test report
 
-Date: 2026-10-10
-Environment: local Vite against production Supabase; Vercel production smoke test.
+Updated: 2026-10-21 (Africa/Casablanca)
+Environment: shared checkout, local Vite/browser-storage demo. No hosted backend changes or real patient data.
 
-| Test | Result | Evidence |
-|---|---|---|
-| Production build | Pass | Vite transformed 1,693 modules; only the existing chunk-size warning remains |
-| Public booking metadata and slots | Pass | Remote RPC returned whitelisted metadata and live 30-minute slots |
-| Booking responsive UI | Pass | 320 px, 390 px and desktop; no horizontal overflow or console errors |
-| Booking conflict protection | Pass at database command level | Advisory lock and slot recheck deployed |
-| Chair/room availability and abuse limit | Pass | `supabase/tests/booking_resources_rate_limits.sql` verified cross-practitioner resource collision rejection, separate-resource concurrency, public resource assignment and rejection of the fourth booking by the same normalized contact, then rolled back |
-| Normalized appointment workflow | Pass | `supabase/tests/appointment_workflows.sql` verified internal creation, overlap rejection, reschedule, status transition, public management, cancellation and event history, then rolled back |
-| Booking → agenda → Acquisition | Pass | `supabase/tests/public_booking_acquisition.sql` verified agenda visibility, `Rendez-vous` Kanban placement, linked history and phone/email deduplication, then rolled back |
-| Booking service and visit reason | Pass | `supabase/tests/public_booking_service_choice.sql` verified the public service catalogue, service-specific slots, backend reason validation, normalized agenda persistence and Acquisition concern linkage, then rolled back |
-| Progressive booking mobile UI | Pass | Seven focused steps—service, reason, date, time, identity, contact and review—were exercised at 390×844 through the final confirmation screen without writing a booking or causing horizontal overflow |
-| Public booking management UI | Pass | Live booking form and invalid/expired management-token state verified at 390×844 without submitting patient data |
-| Acquisition core journey | Pass | `supabase/tests/acquisition_p0.sql` completed and rolled back |
-| Invalid media token | Pass | `acquisition-media` returned HTTP 401 and created no object |
-| Acquisition mobile UI | Pass | Pipeline, profile and four intake steps checked at 390 px |
-| Remote module route smoke test | Pass | 14 internal routes loaded with no visible data error |
-| Production remote backend | Pass | Root shows Supabase Auth; booking page loads remote clinic data |
-| Legacy-record backend permissions | Pass | `supabase/tests/access_control.sql` verified administrator and assistant behavior, then rolled back |
-| Server-authoritative finance ledger | Pass | `supabase/tests/finance_ledger.sql` verified idempotency, overpayment rejection, linked correction, immutable access boundary and cash reconciliation, then rolled back |
-| Finance API exposure | Pass | Four RPC-only RLS policies; zero anonymous finance grants; no finance QA rows remained |
-| Financial reporting and export | Pass | `supabase/tests/financial_reporting.sql` verified date-scoped aggregates, method/service/collector groupings, detailed CSV source rows, audit logging and denial without `reports.finance` / `reports.export`, then rolled back |
-| Finance browser UI | Pass | Remote history, correction modal and authoritative balance verified; 390×844 payment form has no horizontal overflow and a 45 px primary action |
-| Clinical workflow transaction | Pass | Temporary assistant request → administrator approval → plan repricing → finance price resolution, all rolled back |
-| Clinical browser UI | Pass | Remote clinical and negotiated-price pages plus both creation modals load without writing patient data |
-| Patient privacy boundary | Pass | `supabase/tests/patient_access.sql` verified basic reception access, medical-data denial, direct-table denial and administrator medical access, then rolled back |
-| Patient regression suite | Pass | Acquisition, finance, clinical, appointment and booking bridge suites all pass after the patient RPC migration; zero QA patients, medical records or Auth users remain |
-| Downloadable payment receipt | Pass | Browser-native PDF generator produced a valid one-page A4 receipt; Poppler rendering showed no clipping/overlap and pypdf verified French accents and payment fields |
-| Staff invitation boundary | Pass | `supabase/tests/staff_invitations.sql` verified assistant and practitioner claims, practitioner-directory linkage, idempotence, RPC-only storage and rollback cleanup |
-| Staff access-link function | Pass | `staff-invite-link` is active with JWT verification and returned HTTP 401 to an anonymous request |
-| Auth bootstrap hardening | Pass | Public bootstrap reports closed after the first administrator; the production-mode login screen no longer exposes free administrator registration |
-| Staff invitation mobile UI | Pass | Invalid/expired link state rendered at 390×844 without overflow |
+## Current checkout checks
 
-## Not yet passed
+| Check | Actual result | Meaning |
+| --- | --- | --- |
+| `pnpm build` | Passed; 1,697 modules transformed | Client bundle compiles |
+| `pnpm e2e --reporter=line` | **20 passed, 11 skipped** (31 total) | Public/demo Chromium checks pass; local Auth/backend guards skipped |
+| Phase 9 route audit | Passed at 390px and 1440px across 17 internal and 4 public entry/error routes | No page-level horizontal overflow, unnamed visible controls or uncaught page errors in those baseline states |
+| Phase 9 dialog audit | Passed at 390px and 1440px for 9 key CRM, patient, agenda, clinical, approval and cash dialogs | Visible form controls named; focus enters dialog, Escape closes and restores focus |
+| Failed-save recovery | Passed with injected demo storage failure | CRM dialog displayed the failure, retained input and saved after retry |
+| Demo role denial | Passed | Assistant was denied clinical, reports, payment history and settings routes; agenda remained available |
+| Integrated synthetic journey | Passed at 390px | Lead/follow-up → booking → agenda/patient → visit/plan → price approval → cash payment/session → report/reminder consent |
+| `node --check` for Phase 9 specs; `git diff --check` | Passed; Git emitted existing local LF/CRLF conversion warnings | Syntax/whitespace only |
+| Docker/WSL prerequisite | Phase 10 found no running engine; later Phase 3 launched Docker Desktop, saw `WslVirtualMachinePlatformNotEnabled`, and completed `wsl --install --no-distribution` | Windows requires a restart; local Supabase runtime checks remain blocked |
+| Phase 10 SQL structure/parse | 36 migrations and 21 selected transactional SQL suites parsed; baseline matches `schema.sql` | Syntax/structure evidence only; no migration or PL/pgSQL execution |
+| Phase 10 local script syntax | Node, PowerShell and TOML checks passed | Scripts parse; Auth/Storage/Edge behavior remains unverified |
 
-- Simultaneous public booking load test with two real HTTP clients.
-- Optional IP-level edge/WAF throttling test for repeated invalid requests.
-- Browser E2E using a dedicated invited assistant Auth account (the current project still has only the administrator account).
-- Clinic/legal review of Moroccan receipt wording, numbering and retention.
-- Full-day operational journey with two real staff accounts and cash-session isolation.
+Existing Phase 1–8 status files record their own build/demo/static results, SQL syntax parsing and the earlier Docker engine blocker. Phase 10 corrected the booking-race test slug to match the synthetic fixture; the HTTP race has not run. Parsing SQL or displaying a demo screen does **not** execute migrations, PL/pgSQL, RLS or Edge Functions.
 
-No final production-readiness claim is made until the remaining tests pass.
+## Pending local acceptance
+
+After the human completes the required Windows restart and Docker Desktop's Linux engine is running, run from the repository root:
+
+```powershell
+./scripts/local-start.ps1 -Reset
+./scripts/local-sql-tests.ps1
+./scripts/local-e2e.ps1
+```
+
+Record actual fresh migration results, all 21 transactional SQL suites, Auth sign-in and invitation claims, two-clinic/role denial, private Storage and Edge token/media behavior, booking management and two-client race, patient/clinical/finance/reminder/report RPC results, audited exports and the full synthetic clinic browser journey. The current 11 guarded browser tests must run against this target. The exact checklist and current blocker are in `PHASE_10_STATUS.md` and `LOCAL_DEVELOPMENT.md`.
+
+## Historical evidence boundary
+
+The previous report dated 2026-10-10 described hosted Supabase and production smoke checks on an earlier code/deployment state. Those results were useful historical evidence for booking, CRM, finance and access-control work, but they do not accept the Phase 1–9 implementation or migrations 029–036. No current production readiness, complete EHR capability or real message delivery is claimed.

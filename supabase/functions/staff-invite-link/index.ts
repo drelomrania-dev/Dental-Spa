@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "npm:@supabase/supabase-js@2"
 
-const defaultOrigins=["https://dental-spa-taupe.vercel.app","http://localhost:5173","http://127.0.0.1:5173"]
+const defaultOrigins=["https://dental-spa-taupe.vercel.app","http://localhost:5173","http://127.0.0.1:5173","http://localhost:4173","http://127.0.0.1:4173"]
 const configuredOrigins=[Deno.env.get("PUBLIC_APP_URL")||"",...(Deno.env.get("ALLOWED_ORIGINS")||"").split(",")]
   .map(value=>{try{return new URL(value.trim()).origin}catch{return null}})
   .filter((value):value is string=>Boolean(value))

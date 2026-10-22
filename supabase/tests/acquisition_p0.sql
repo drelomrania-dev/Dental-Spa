@@ -29,8 +29,8 @@ begin
   values(clinic,test_lead_id,'Note','Interne','Interaction transactionnelle');
   insert into follow_up_tasks(clinic_id,lead_id,title,due_at)
   values(clinic,test_lead_id,'Relance transactionnelle',now()+interval '1 day');
-  insert into lead_quotes(clinic_id,lead_id,title,amount,status)
-  values(clinic,test_lead_id,'Devis transactionnel',1250,'Brouillon');
+  insert into lead_quotes(clinic_id,lead_id,title,amount,currency,status)
+  values(clinic,test_lead_id,'Devis transactionnel',1250,(select currency from clinics where id=clinic),'Brouillon');
 
   invitation:=create_consultation_invitation(test_lead_id,'Lien','consultation',1);
   token:=invitation->>'token';

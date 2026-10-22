@@ -17,6 +17,7 @@ const PublicBooking = lazy(() => import('./pages/PublicBooking'))
 const Clinical = lazy(() => import('./pages/Clinical'))
 const Approvals = lazy(() => import('./pages/Approvals'))
 const CollectionSessions = lazy(() => import('./pages/CollectionSessions'))
+const Reminders = lazy(() => import('./pages/Reminders'))
 import { AuthProvider } from './AuthContext'
 import AuthGate from './components/AuthGate'
 const PublicBookingRemote = lazy(() => import('./pages/PublicBookingRemote'))
@@ -39,10 +40,11 @@ function InternalRoutes(){ return <Routes><Route element={<Layout/>}>
     <Route path="/payment-history" element={<RequirePermission permission="payments.view.all" roles={['administrator']}><PaymentHistory/></RequirePermission>}/>
     <Route path="/receivables" element={<RequirePermission permission="payments.view.all" roles={['administrator']}><Receivables/></RequirePermission>}/>
     <Route path="/appointments" element={<RequirePermission permission="appointments.view" roles={['administrator']}><Appointments/></RequirePermission>}/>
-    <Route path="/doctors" element={<RequirePermission permission="services.view" roles={['administrator']}><Doctors/></RequirePermission>}/>
-    <Route path="/treatments" element={<RequirePermission permission="services.view" roles={['administrator']}><Treatments/></RequirePermission>}/>
+    <Route path="/reminders" element={<RequirePermission permission="reminders.manage" roles={['administrator']}><Reminders/></RequirePermission>}/>
+    <Route path="/doctors" element={<RequirePermission permissions={['services.view','services.manage','settings.manage']} roles={['administrator']}><Doctors/></RequirePermission>}/>
+    <Route path="/treatments" element={<RequirePermission permissions={['services.view','services.manage','settings.manage']} roles={['administrator']}><Treatments/></RequirePermission>}/>
     <Route path="/reports" element={<RequirePermission permission="reports.finance" roles={['administrator']}><Reports/></RequirePermission>}/>
-    <Route path="/settings" element={<RequirePermission permission="settings.manage" roles={['administrator']}><Settings/></RequirePermission>}/>
+    <Route path="/settings" element={<RequirePermission permissions={['settings.manage','staff.manage','permissions.manage','audit.view']} roles={['administrator']}><Settings/></RequirePermission>}/>
     <Route path="/clinical" element={<RequirePermission permission="clinical.view" roles={['administrator']}><Clinical/></RequirePermission>}/>
     <Route path="/approvals" element={<RequirePermission permissions={['priceRequests.create','priceRequests.approve']} roles={['administrator']}><Approvals/></RequirePermission>}/>
     <Route path="/collection-sessions" element={<RequirePermission permissions={['sessions.own','sessions.manage']} roles={['administrator']}><CollectionSessions/></RequirePermission>}/>

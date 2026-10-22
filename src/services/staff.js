@@ -17,3 +17,4 @@ export async function createStaffAccess({email,name,role}){
 
 export async function revokeStaffAccess(id){requireRemote();return unwrap(await supabase.rpc('revoke_staff_invitation',{p_invitation_id:id}))}
 export async function loadPublicStaffInvitation(token){requireRemote();return unwrap(await supabase.rpc('public_staff_invitation',{p_token:token}))}
+export async function setStaffMembership(id,role,active){requireRemote();return unwrap(await supabase.rpc('set_staff_membership',{p_staff_id:id,p_role:role,p_active:active}))}

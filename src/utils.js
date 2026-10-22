@@ -1,4 +1,4 @@
-export const money = value => `${Number(value || 0).toLocaleString('fr-MA', {maximumFractionDigits:2})} DH`
+export const money = (value,currency='MAD') => `${Number(value || 0).toLocaleString('fr-MA', {maximumFractionDigits:2})} ${currency==='MAD'?'DH':currency}`
 export const todayISO = () => {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`

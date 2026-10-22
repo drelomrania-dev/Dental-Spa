@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures.js'
-import { hasAuthenticatedTarget, hasTwoAccountConfig, missingAuthenticatedTargetReason, missingTwoAccountConfigReason } from './fixtures.js'
+import { hasAuthenticatedTarget, hasTwoAccountConfig, hasTwoClinicConfig, missingAuthenticatedTargetReason, missingTwoAccountConfigReason, missingTwoClinicConfigReason } from './fixtures.js'
 
 test.describe('administrator login shell', () => {
   test.skip(!hasAuthenticatedTarget, missingAuthenticatedTargetReason)
@@ -9,6 +9,18 @@ test.describe('administrator login shell', () => {
     await expect(page.getByRole('heading', { name: /Connexion au cabinet/i })).toBeVisible()
     await expect(page.getByLabel('Email')).toBeVisible(); await expect(page.getByLabel('Mot de passe')).toBeVisible()
     await context.close()
+  })
+})
+
+test.describe('two clinic patient boundary', () => {
+  test.skip(!hasTwoClinicConfig, missingTwoClinicConfigReason)
+  test('shows each administrator only their own clinic patient', async ({ adminPage, otherAdminPage }) => {
+    await adminPage.goto('/patients')
+    await expect(adminPage.getByRole('link', { name: 'Test Patient A' })).toBeVisible()
+    await expect(adminPage.getByRole('link', { name: 'Test Patient B' })).toHaveCount(0)
+    await otherAdminPage.goto('/patients')
+    await expect(otherAdminPage.getByRole('link', { name: 'Test Patient B' })).toBeVisible()
+    await expect(otherAdminPage.getByRole('link', { name: 'Test Patient A' })).toHaveCount(0)
   })
 })
 

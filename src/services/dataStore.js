@@ -26,11 +26,11 @@ function localSave(name, rows){
 
 export async function listDocs(name){
   if (supabaseEnabled){
-    if(name==='payments'||name==='collectionSessions'){
+    if(name==='payments'||name==='collectionSessions'||name==='financeAccounts'){
       const snapshot=await loadFinanceSnapshot()
-      return name==='payments'?snapshot.payments:snapshot.sessions
+      return name==='payments'?snapshot.payments:name==='financeAccounts'?snapshot.accounts:snapshot.sessions
     }
-    if(name==='visits'||name==='treatmentPlans'||name==='priceRequests'){
+    if(name==='visits'||name==='treatmentPlans'||name==='priceTargets'||name==='priceRequests'){
       const snapshot=await loadClinicalSnapshot()
       return snapshot[name]
     }
@@ -136,7 +136,7 @@ export function saveClinic(clinic){ localStorage.setItem(PREFIX + 'clinic', JSON
 export async function loadClinic(){
   if(!supabaseEnabled) return getClinic()
   const rows = await listDocs('_clinic')
-  return rows[0] || getClinic()
+  return rows.find(row=>row.id==='settings') || getClinic()
 }
 
 export async function persistClinic(clinic){
@@ -149,6 +149,7 @@ export async function persistClinic(clinic){
 }
 
 export function appointmentOverlaps(candidate, appointments){
+  if(['Annulé','No-show'].includes(candidate.status))return false
   const start = toMinutes(candidate.time)
   const end = start + Number(candidate.duration || 30)
   return appointments.some(a => a.id !== candidate.id && a.date === candidate.date && ['Annulé','No-show'].includes(a.status) === false && (a.doctorId === candidate.doctorId || (candidate.roomId && a.roomId === candidate.roomId)) && start < toMinutes(a.time) + Number(a.duration || 30) && end > toMinutes(a.time))

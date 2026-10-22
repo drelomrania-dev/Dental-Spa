@@ -50,7 +50,7 @@ export const seedData = {
   ],
   roles: [
     { id:'role-admin', name:'Administrateur', permissions:['*'] },
-    { id:'role-assistant', name:'Accueil', permissions:['appointments.view','appointments.create','appointments.edit','appointments.cancel','patients.basic.view','patients.create','patients.edit','services.view','payments.collect','payments.receipt','payments.view.own','priceRequests.create','sessions.own','acquisition.view','acquisition.manage'] },
+    { id:'role-assistant', name:'Accueil', permissions:['appointments.view','appointments.create','appointments.edit','appointments.cancel','patients.basic.view','patients.create','patients.edit','services.view','payments.collect','payments.receipt','payments.view.own','priceRequests.create','sessions.own','acquisition.view','acquisition.manage','reminders.manage'] },
     { id:'role-practitioner', name:'Praticien', permissions:['appointments.view','appointments.edit','patients.basic.view','clinical.view','clinical.edit','plans.create','services.view','acquisition.view'] }
   ]
 }
